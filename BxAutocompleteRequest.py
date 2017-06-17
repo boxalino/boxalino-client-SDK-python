@@ -1,4 +1,3 @@
-#import "com\boxalino\bxclient\v1";
 
 class BxAutocompleteRequest:
 	_language =None
@@ -104,9 +103,8 @@ class BxAutocompleteRequest:
 		_autocompleteRequest._profileId = profileid
 		_autocompleteRequest._choiceId = self._choiceId
 		_autocompleteRequest._searchQuery = self._bxSearchRequest.getSimpleSearchQuery(self)
-        _autocompleteRequest._searchChoiceId = self._bxSearchRequest.getChoiceId(self)
+		_autocompleteRequest._searchChoiceId = self._bxSearchRequest.getChoiceId(self)
 		_autocompleteRequest._autocompleteQuery = self.getAutocompleteQuery(self)
-		
 		if len(self._propertyQueries)>0:
 			_autocompleteRequest._propertyQueries = self._propertyQueries;
 		return _autocompleteRequest;

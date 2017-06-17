@@ -12,7 +12,7 @@ class BxData:
 
 	URL_VERIFY_CREDENTIALS = '/frontend/dbmind/en/dbmind/api/credentials/verify'
 	URL_XML = '/frontend/dbmind/en/dbmind/api/data/source/update'
-    URL_PUBLISH_CONFIGURATION_CHANGES = '/frontend/dbmind/en/dbmind/api/configuration/publish/owner'
+	URL_PUBLISH_CONFIGURATION_CHANGES = '/frontend/dbmind/en/dbmind/api/configuration/publish/owner'
 	URL_ZIP = '/frontend/dbmind/en/dbmind/api/data/push'
 	URL_EXECUTE_TASK = '/frontend/dbmind/en/dbmind/files/task/execute'
 	
@@ -107,19 +107,17 @@ class BxData:
 	def addSourceFile(self, filePath, sourceId, container, type, format='CSV', params={}, validate=True) :
 		if self.getLanguages().len() == 0 :
 			raise Exception('trying to add a source before having declared the languages with method setLanguages')
-		
 		try :
-			if self.sources[container] != None :
-			
+			if self.sources[container] != None:
+				pass
 		except IndexError:
-				self.sources[container] = {}
-
+			self.sources[container] = {}
 		_params['filePath'] = filePath
 		_params['format'] = format
 		_params['type'] = type
-		self..sources[container][sourceId] = _params
+		self.sources[container][sourceId] = _params
 		if validate == True :
-			self..validateSource(self, container, sourceId)
+			self.validateSource(self, container, sourceId)
 		
 		self.sourceIdContainers[sourceId] = container
 		return self.encodesourceKey(self, container,sourceId)
@@ -144,9 +142,10 @@ class BxData:
 				_count = 1
 				self.sources[container][sourceId]['rows'] = {}
 				_data = csv.reader(_handle, delimiter=',', quotechar='')
-				while _data !== False :
-					self.sources[container][sourceId]['rows'][] = _data
-					if _count++>=maxRow :
+				while _data != False :
+					self.sources[container][sourceId]['rows'].append( _data)
+					_count +=1
+					if _count >= maxRow :
 						break
 					
 				_handle.close()
@@ -165,7 +164,7 @@ class BxData:
 	
 	def validateColumnExistance(self, container, sourceId, col) :
 		_row = self.getSourceCSVRow(self, container, sourceId, 0)
-		if _row !== None and col not in _row :
+		if _row != None and col not in _row :
 			raise Exception("the source '$sourceId' in the container '$container' declares an column '$col' which is not present in the header row of the provided CSV file: " + ','.join(_row))
 		
 	
@@ -220,14 +219,14 @@ class BxData:
 
 		self.sources[_container][_sourceId]['fields'][fieldName] = {'type':type, 'localized':localized, 'map':colMap, 'referenceSourceKey':referenceSourceKey}
 		if self.sources[_container][_sourceId]['format'] == 'CSV' :
-			if localized and referenceSourceKey == None) :
+			if localized and referenceSourceKey == None :
 				if isinstance(colMap,list)==False :
 					raise Exception(fieldName+': invalid column field name for a localized field (expect an array with a column name for each language array(lang:colName)): ' + serialize(colMap))
 				
 				for _lang in self.getLanguages() :
 					try:
 						if colMap[_lang] != None :
-
+							pass
 					except :
 						raise Exception(fieldName+': no language column provided for language '+lang+' in provided column map): ' + serialize(colMap))
 					
@@ -239,7 +238,7 @@ class BxData:
 					
 				
 			else:
-				if isinstance($colMap,str)==False :
+				if isinstance(colMap,str)==False :
 					raise Exception(fieldName+' invalid column field name for a non-localized field (expect a string): ' + serialize(colMap))
 				
 				if validate== True :
@@ -247,7 +246,7 @@ class BxData:
 				
 	
 	def setFieldIsMultiValued(self, sourceKey, fieldName, multiValued = True) :
-		self.addFieldParameter(self, sourceKey, fieldName, 'multiValued', multiValued ? 'True' : 'False')
+		self.addFieldParameter(self, sourceKey, fieldName, 'multiValued', True if multiValued else 'False')
 	
 
 	def addSourceCustomerGuestProperty(self, sourceKey, parameterValue) :
@@ -258,7 +257,7 @@ class BxData:
 		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
 		try:
 			if self.sources[_container][_sourceId] != None:
-		
+				pass
 		except :
 			raise Exception("trying to add a source parameter on sourceId '$sourceId', container "+_container+" while this source doesn't exist")
 		
@@ -269,13 +268,13 @@ class BxData:
 		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
 		try:
 			if self.sources[_container][_sourceId]['fields'][fieldName] != None:
-
+				pass
 		except IndexError:
 			raise ("trying to add a field parameter on sourceId "+_sourceId+", container "+_container+", fieldName "+_fieldName+" while this field doesn't exist")
 		
 		try:
 			if self.sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] != None:
-
+				pass
 		except IndexError:
 			self.sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] = {}
 		
@@ -287,11 +286,11 @@ class BxData:
 				timezoneoffset=0, pasvMode='MODE_DEFAULT', maximumMultipeConnections=0, encodingType='Auto', bypassProxy=0, syncBrowsing=0) :
 					
 		if user==None:
-			$user = self.bxClient.getAccount(False)
+			user = self.bxClient.getAccount(False)
 		
 		
 		if password==None:
-			$password = self.bxClient.getPassword()
+			password = self.bxClient.getPassword()
 		
 		
 		_params = array()
@@ -307,7 +306,7 @@ class BxData:
 		_params['MaximumMultipleConnections'] = maximumMultipeConnections
 		_params['EncodingType'] = encodingType
 		_params['BypassProxy'] = bypassProxy
-		_params['Name'] = user + " at " + $host
+		_params['Name'] = user + " at " + host
 		_params['RemoteDir'] = remoteDir
 		_params['SyncBrowsing'] = syncBrowsing
 		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
@@ -323,13 +322,13 @@ class BxData:
 			ET.SubElement(language, "language", id=_lang)
 
 		containers = ET.SubElement(root, "containers")
-        for _containerName , _containerSources in self.sources():
+		for _containerName , _containerSources in self.sources():
 			
 			container = ET.SubElement(containers, "container", id=_containerName, type=_containerName)
 			
 			sources = ET.SubElement(container , 'sources')
 			properties = ET.SubElement(container, 'properties')
-        
+
 			for _sourceId , _sourceValues in _containerSources ():
 				
 				try:
@@ -398,7 +397,7 @@ class BxData:
 							try:
 								ET.SubElement(source , _parameter).set('guest_property_id', _sourceValues['guest_property_id']);
 							except :
-						
+								pass
 				if self.ftpSources[_sourceId]!=None :
 					
 					ET.SubElement(source , 'location').set('type', 'ftp');
@@ -432,6 +431,7 @@ class BxData:
 									if _parameterName == 'pc_tables':
 										_logicType = 'advanced'
 							except IndexError:
+								pass
 						ET.SubElement(transform, "logic").set('type',_logicType)
 						
 						if isinstance(_fieldValues['map'], list) :
@@ -446,7 +446,7 @@ class BxData:
 						
 						if _referenceSourceKey!= None :
 							referenceSource = ET.SubElement(_params, 'referenceSource')
-							(_referenceContainer, _referenceSourceId) = self..decodeSourceKey(_referenceSourceKey)
+							(_referenceContainer, _referenceSourceId) = self.decodeSourceKey(_referenceSourceKey)
 							ET.SubElement(_params, 'referenceSource').set('value', _referenceSourceId)
 						
 						try:
@@ -454,29 +454,30 @@ class BxData:
 								fieldParameter = ET.SubElement(_params, 'fieldParameter', name=_parameterName,value=_parameterValue)
 							
 						except IndexError:
+							pass
 		tree = ET.ElementTree(root)
 		return tree.write("filename.xml")
 		
 
-    def callAPI(self, fields, url, temporaryFilePath=None):
-        
-        s = pycurl.Curl()
+	def callAPI(self, fields, url, temporaryFilePath=None):
+
+		s = pycurl.Curl()
 
 		
-        s.setopt(s.URL, url)
-        s.setopt(s.TIMEOUT, 60)
-        s.setopt(s.POST, 1)
-        s.setopt(s.ENCODING, '')
-        s.setopt(s.RETURNTRANSFER, 1)
-        s.setopt(s.POSTFIELDS, fields)
-        b = StringIO.StringIO()
-        c.setopt(pycurl.WRITEFUNCTION, b.write)
+		s.setopt(s.URL, url)
+		s.setopt(s.TIMEOUT, 60)
+		s.setopt(s.POST, 1)
+		s.setopt(s.ENCODING, '')
+		s.setopt(s.RETURNTRANSFER, 1)
+		s.setopt(s.POSTFIELDS, fields)
+		b = StringIO.StringIO()
+		c.setopt(pycurl.WRITEFUNCTION, b.write)
 
-        c.perform()
+		c.perform()
 		responseBody = b.getvalue()
 		if responseBody == False:
 			if "couldn't open file" in s.errstr() :
-				if temporaryFilePath !== None :
+				if temporaryFilePath != None :
 					raise Exception('There seems to be a problem with the folder BxData uses to temporarily store a zip file with all your files before sending it. As you are currently provided a path, this is most likely the problem. Please make sure it is a valid path, or leave it to None (default value), then BxData will use sys_get_temp_dir() + "/bxclient" which typically works fine.')
 				else :
 					raise Exception('There seems to be a problem with the folder BxData uses to temporarily store a zip file with all your files before sending it. This means that the default path BxData uses sys_get_temp_dir() + "/bxclient" is not supported and you need to path a working path to the pushData function.')
@@ -485,12 +486,12 @@ class BxData:
 			raise Exception('Curl error: ' + s.errstr())
 		
 
-        s.close()
-        if 'Internal Server Error' in responseBody :
-            raise Exception(self.getError(responseBody))
-        
-        return self.checkResponseBody(responseBody, url)
-    
+		s.close()
+		if 'Internal Server Error' in responseBody :
+			raise Exception(self.getError(responseBody))
+
+		return self.checkResponseBody(responseBody, url)
+
 	
 	def getError(responseBody) :
 		return responseBody
@@ -516,7 +517,7 @@ class BxData:
 		
 		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'xml' : self.getXML()}
 
-        url = self.host + self.URL_XML
+		url = self.host + self.URL_XML
 		return self.callAPI(fields, url)
 	
 	
@@ -532,16 +533,16 @@ class BxData:
 		if self.isDev!= None :
 			publish = False
 		
-		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'publish' : ($publish ? 'True' : 'False')}
+		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'publish' : ( 'True' if publish else 'False')}
 
-        url = self.host + self.URL_PUBLISH_CONFIGURATION_CHANGES
+		url = self.host + self.URL_PUBLISH_CONFIGURATION_CHANGES
 		return self.callAPI(fields, url)
 	
 	
 	def verifyCredentials(self) :
-		$fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner}
+		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner}
 
-        url = self.host + self.URL_VERIFY_CREDENTIALS
+		url = self.host + self.URL_VERIFY_CREDENTIALS
 		return self.callAPI(fields, url)
 	
 	
@@ -568,62 +569,62 @@ class BxData:
 		return files
 	
 	
-    def createZip( self , temporaryFilePath=None, name='bxdata.zip'):
+	def createZip( self , temporaryFilePath=None, name='bxdata.zip'):
 		if temporaryFilePath == None :
 			temporaryFilePath = tempfile.gettempdir() + '/bxclient'
 		
 		
 		if temporaryFilePath != "" and os.path.exists(temporaryFilePath) != True :
-            os.mkdir($temporaryFilePath)
-        
+			os.mkdir(temporaryFilePath)
+
 		
 		zipFilePath = temporaryFilePath + '/' + name
 		
-        if os.path.exists(zipFilePath) == True :
-            os.unlink(zipFilePath)
-        
+		if os.path.exists(zipFilePath) == True :
+			os.unlink(zipFilePath)
+
 		
 		files = self.getFiles()
 		zzip = zipfile.ZipFile(zipFilePath, 'w') 
-        if zzip == True :
+		if zzip == True :
 
-            for _f , _filePath in files :
-                if zzip.write($filePath) != True:
-                    raise Exception('Synchronization failure: Failed to add file "' +_filePath+ '" to the zip "' +name+ '". Please try again.')
-                
-            if zzip.writestr('properties.xml', self.getXML()) != True :
-                raise Exception('Synchronization failure: Failed to add xml string to the zip "' +name + '". Please try again.')
-            
+			for _f , _filePath in files :
+				if zzip.write(_filePath) != True:
+					raise Exception('Synchronization failure: Failed to add file "' +_filePath+ '" to the zip "' +name+ '". Please try again.')
 
-            if zzip.close() != True :
-                raise Exception('Synchronization failure: Failed to close the zip "' +name + '". Please try again.')
-            
-        else :
-            raise Exception('Synchronization failure: Failed to open the zip "' +name + '" for writing. Please check the permissions and try again.')
-        
+			if zzip.writestr('properties.xml', self.getXML()) != True :
+				raise Exception('Synchronization failure: Failed to add xml string to the zip "' +name + '". Please try again.')
+
+
+			if zzip.close() != True :
+				raise Exception('Synchronization failure: Failed to close the zip "' +name + '". Please try again.')
+
+		else :
+			raise Exception('Synchronization failure: Failed to open the zip "' +name + '" for writing. Please check the permissions and try again.')
+
 		return zipFilePath
-    
+
 	
 	def pushData(self, temporaryFilePath=None) :
 		
 		zipFile = self.createZip(temporaryFilePath)
 		
-		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'dev' : self.isDev ? 'True' : 'False','delta' : self.isDelta ? 'True' : 'False','data' : self.getCurlFile($zipFile, "application/zip")}
+		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'dev' : 'True' if self.isDev else 'False','delta' : 'True' if self.isDelta else 'False','data' : self.getCurlFile(zipFile, "application/zip")}
 
-        url = self.host + self.URL_ZIP
+		url = self.host + self.URL_ZIP
 		return self.callAPI(self, fields, url,temporaryFilePath)
 	
 
-    def getCurlFile(self, filename, ttype):
-        result = False
-        result = (eval("type("+className+")") == types.ClassType)
-        try :
-            if result== True :
-                return CURLFile(filename, ttype)
-        except :
-        	
-        return filename+'type='+ttype
-    
+	def getCurlFile(self, filename, ttype):
+		result = False
+		result = (eval("type("+className+")") == types.ClassType)
+		try :
+			if result== True :
+				return CURLFile(filename, ttype)
+		except :
+			pass
+		return filename+'type='+ttype
+
 	
 	def getTaskExecuteUrl(self, taskName) :
 		return self.host + self.URL_EXECUTE_TASK + '?iframeAccount=' + self.bxClient.getAccount() + '&task_process=' + taskName
@@ -637,35 +638,35 @@ class BxData:
 		if isTest== True :
 			taskName += '_test'
 		
-        url = self.getTaskExecuteUrl(taskName)
+		url = self.getTaskExecuteUrl(taskName)
 		file_get_contents(url)
 	
 	
 	def prepareCorpusIndex(self, taskName="corpus") :
-        url = self.getTaskExecuteUrl(taskName)
+		url = self.getTaskExecuteUrl(taskName)
 		file_get_contents(url)
 	
 	
 	def prepareAutocompleteIndex(self, fields, taskName="autocomplete") :
-        url = self.getTaskExecuteUrl(taskName)
+		url = self.getTaskExecuteUrl(taskName)
 		file_get_contents(url)
 	
 
 	def file_get_contents(filename, use_include_path = 0, context = None, offset = -1, maxlen = -1):
-    if (filename.find('://') > 0):
-        ret = urllib2.urlopen(filename).read()
-        if (offset > 0):
-            ret = ret[offset:]
-        if (maxlen > 0):
-            ret = ret[:maxlen]
-        return ret
-    else:
-        fp = open(filename,'rb')
-        try:
-            if (offset > 0):
-                fp.seek(offset)
-            ret = fp.read(maxlen)
-            return ret
-        finally:
-            fp.close( )
+		if (filename.find('://') > 0):
+			ret = urllib2.urlopen(filename).read()
+			if (offset > 0):
+				ret = ret[offset:]
+			if (maxlen > 0):
+				ret = ret[:maxlen]
+			return ret
+		else:
+			fp = open(filename,'rb')
+			try:
+				if (offset > 0):
+					fp.seek(offset)
+				ret = fp.read(maxlen)
+				return ret
+			finally:
+				fp.close( )
 

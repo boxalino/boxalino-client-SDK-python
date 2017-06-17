@@ -1,4 +1,5 @@
-class BxParametrizedRequest(BxRequest.BxParametrizedRequest):
+from BxRequest import *
+class BxParametrizedRequest(BxRequest):
 
 	_bxReturnFields = ['id']
 	_getItemFieldsCB = None
@@ -30,7 +31,7 @@ class BxParametrizedRequest(BxRequest.BxParametrizedRequest):
 		self.requestWeightedParametersPrefix = requestWeightedParametersPrefix
 	
 	
-	sef getRequestWeightedParametersPrefix(self) :
+	def getRequestWeightedParametersPrefix(self) :
 		return self.requestWeightedParametersPrefix
 	
 	
@@ -71,20 +72,20 @@ class BxParametrizedRequest(BxRequest.BxParametrizedRequest):
 	
 	def matchesPrefix(self , string, prefix, checkOtherPrefixes=True) :
 		if checkOtherPrefixes!=None :
-			for _p in self.getPrefixes()
+			for _p in self.getPrefixes():
 				if _p == prefix:
-					continue;
+					continue
 				if prefix.len() < _p.len() and _p in string:
 					return False
 			
-		return prefix == None or prefix in string, $prefix
+		return prefix == None or prefix in string, prefix
 	
 	
 	def getPrefixedParameters(self, prefix, checkOtherPrefixes=True) :
 		_params = {}
-		for _k , _v in self.requestMap
-			if self.matchesPrefix(_k, prefix, checkOtherPrefixes) != None
-				_params[$k[prefix.len():]] = _v
+		for _k , _v in self.requestMap:
+			if self.matchesPrefix(_k, prefix, checkOtherPrefixes) != None:
+				_params[_k[prefix.len():]] = _v
 		
 		return _params
 	
@@ -135,7 +136,7 @@ class BxParametrizedRequest(BxRequest.BxParametrizedRequest):
 				_negative = True
 				_value = _value[1:]
 			
-			_filters[] =  BxFilter(_fieldName, [_value], _negative)
+			_filters.append(BxFilter(_fieldName, [_value], _negative))
 		return _filters
 	
 	
@@ -171,21 +172,21 @@ class BxParametrizedRequest(BxRequest.BxParametrizedRequest):
 		try :
 			if self.requestMap[self.requestReturnFieldsName]:
 				_mergeArray = _returnFields
-				_mergeArray = update(self.requestMap[$this->requestReturnFieldsName].split(','))
+				_mergeArray = update(self.requestMap[self.requestReturnFieldsName].split(','))
 				_returnFields = list(set(_mergeArray))
 		except IndexError:
-		
+			pass
 		return _returnFields
 	
 	
 	__callBackCache = None
 
 	def retrieveFromCallBack(self, items, fields) :
-		if self.__callBackCache === None:
+		if self.__callBackCache == None:
 			self.__callBackCache = {}
 			_ids = {}
 			for _item in items :
-				_ids[] = _item.values['id'][0]
+				_ids.append(_item.values['id'][0])
 			
 			_itemFields = eval(self.getItemFieldsCB)(_ids, fields)
 			if isinstance(_itemFields, list):

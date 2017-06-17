@@ -1,30 +1,26 @@
-# import "com\boxalino\bxclient\v1";
-import md5
+import hashlib
+import BxChooseResponse
 class BxAutocompleteResponse:
-	_response =None
-	_bxAutocompleteRequest =None
-	
+	_response = None
+	_bxAutocompleteRequest = None
 	def __init__(self,response, bxAutocompleteRequest=None):
 		self._response = response
 		self._bxAutocompleteRequest = bxAutocompleteRequest
 
 	def getResponse(self):
-		return self._response;
+		return self._response
 
 	def getPrefixSearchHash(self):
 		if self.getResponse().prefixSearchResult.totalHitCount > 0:
-            return md5.new(self.getResponse().prefixSearchResult.queryText).digest()[:10]
-        else: 
-            return None
+			return hashlib.md5(self.getResponse().prefixSearchResult.queryText)[:10]
 
-
-    def getTextualSuggestions(self):
-		suggestions = [];
+	def getTextualSuggestions(self):
+		suggestions = []
 		for hit in self.getResponse().hits:
-			suggestions.append(hit.suggestion);
-		return self.reOrderSuggestions(suggestions);
+			suggestions.append(hit.suggestion)
+		return self.reOrderSuggestions(suggestions)
 
-    def suggestionIsInGroup(self, groupName, suggestion):
+	def suggestionIsInGroup(self, groupName, suggestion):
 		hit = self.getTextualSuggestionHit(suggestion)
 		if groupName=='highlighted-beginning':
 			return hit._highlighted != "" and self._bxAutocompleteRequest.getHighlightPre() in hit._highlighted is 0
@@ -33,26 +29,26 @@ class BxAutocompleteResponse:
 		else :
 			return hit._highlighted == ""
 	
-    def reOrderSuggestions(self,  suggestion):
+	def reOrderSuggestions(self,  suggestions):
 		_queryText = self._getSearchRequest.getQueryText();
 		
 		_groupNames = ['highlighted-beginning', 'highlighted-not-beginning', 'others'];
-		_groupValues = [];
+		_groupValues = []
 		
-		for _k, _groupName in _groupNames():
+		for _k, _groupName in _groupNames:
 			try:
 				_groupValues[_k]
 			except IndexError:
 				_groupValues[_k] = []
 
-			for _suggestion in _suggestions():
+			for _suggestion in suggestions():
 				if self.suggestionIsInGroup(self, _groupName, _suggestion):
-					_groupValues[_k][] = _suggestion
+					_groupValues[_k].append( _suggestion)
 		
-		_final = [];
+		_final = []
 		for _values in _groupValues():
 			for _value in _values():
-				_final[] = _value
+				_final.append( _value)
 			
 		return _final
 	
@@ -65,11 +61,11 @@ class BxAutocompleteResponse:
 	
 	
 	def getTextualSuggestionTotalHitCount(self,  suggestion):
-		_hit = self.getTextualSuggestionHit(suggestion);
-		return _hit._searchResult.totalHitCount;
+		_hit = self.getTextualSuggestionHit(suggestion)
+		return _hit._searchResult.totalHitCount
 	
 	def getSearchRequest(self):
-		return self._bxAutocompleteRequest.getBxSearchRequest();
+		return self._bxAutocompleteRequest.getBxSearchRequest()
 	
 	
 	def getTextualSuggestionFacets(self, suggestion):
@@ -90,7 +86,11 @@ class BxAutocompleteResponse:
 		return _hit._highlighted
 	
 	def getBxSearchResponse(self, textualSuggestion= None):
-		_searchResult = textualSuggestion == None ? self._getResponse().prefixSearchResult : self._getTextualSuggestionHit(_textualSuggestion)._searchResult
+
+		if textualSuggestion == None :
+			_searchResult =  self._getResponse().prefixSearchResult
+		else :
+			_searchResult = self._getTextualSuggestionHit(_textualSuggestion)._searchResult
 		return BxChooseResponse(_searchResult, self.bxAutocompleteRequest.getBxSearchRequest())
 	
 	def getPropertyHits(self, field):
@@ -109,8 +109,8 @@ class BxAutocompleteResponse:
 	
 	def getPropertyHitValues(self, field):
 		_hitValues =[]
-		for _hit in self._getPropertyHits(fields)
-			_hitValues[] = _hit.value	
+		for _hit in self._getPropertyHits(field):
+			_hitValues.append(_hit.value)
 		return _hitValues
 	
 	
@@ -124,4 +124,4 @@ class BxAutocompleteResponse:
 		_hit = self.getPropertyHit(field, hitValue);
 		if _hit != None:
 			return _hit._totalHitCount
-		return None	
+		return None

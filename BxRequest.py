@@ -1,4 +1,5 @@
-class BxRequest: 
+import BxSortFields
+class BxRequest:
  
 	_language = None 
 	_groupBy = None 
@@ -9,12 +10,12 @@ class BxRequest:
 	 
 	_indexId = None 
 	_requestMap = None 
-	_returnFields = : 
+	_returnFields = None
 	_offset = 0 
 	_queryText = "" 
 	_bxFacets = None 
 	_bxSortFields = None 
-	_bxFilters = : 
+	_bxFilters = None
 	_orFilters = False 
 	 
 	def __init__(language, choiceId, max=10, min=0) : 
@@ -52,23 +53,23 @@ class BxRequest:
 	 
 	 
 	def setOffset(self, offset) : 
-		self.offset = $offset 
+		self.offset = offset
 	 
 	 
 	def getQuerytext(self) : 
-		return selfqueryText 
+		return self.queryText
 	 
 	 
 	def setQuerytext(self, queryText) : 
-		self.queryText = $queryText 
+		self.queryText = queryText
 	 
 	 
-	def getFacets(self)  
+	def getFacets(self) :
 		return self.bxFacets 
 	 
 	 
 	def setFacets(self, bxFacets) : 
-		self.bxFacets = $bxFacets 
+		self.bxFacets = bxFacets
 	 
 	 
 	def getSortFields(self) : 
@@ -76,20 +77,20 @@ class BxRequest:
 	 
 	 
 	def setSortFields(self, bxSortFields) : 
-		self.bxSortFields = $bxSortFields 
+		self.bxSortFields = bxSortFields
 	 
 	 
 	def getFilters(self) : 
 		_filters = self.bxFilters 
 		if self.getFacets() != None: 
 			for _filter in self.getFacets().getFilters() : 
-				_filters[] = _filter 
+				_filters.append( _filter )
 		 
 		return self.bxFilters 
 	 
 	 
 	def setFilters(self, bxFilters) : 
-		self.bxFilters = $bxFilters 
+		self.bxFilters = bxFilters
 	 
 	 
 	def addFilter(self , bxFilter) : 
@@ -135,7 +136,7 @@ class BxRequest:
 		self.min = min 
 	 
  
-	def getIndexId(self.) : 
+	def getIndexId(self) :
 		return self.indexId 
 	 
 	 
@@ -189,7 +190,7 @@ class BxRequest:
 		if self.getFilters().len() > 0 : 
 			_searchQuery.filters = {} 
 			for _filter in self.getFilters() : 
-				_searchQuery.filters[] = _filter.getThriftFilter() 
+				_searchQuery.filters.append( _filter.getThriftFilter() )
 			 
 		 
 		_searchQuery.orFilters = self.getOrFilters() 
@@ -208,19 +209,19 @@ class BxRequest:
 		_contextItem.fieldName = fieldName 
 		_contextItem.contextItemId = contextItemId 
 		_contextItem.role = role 
-		self.contextItems[] = _contextItem 
+		self.contextItems.append( _contextItem )
 	 
 	def usort(_a, _b):
 		if _a['price'] > _b['price'] : 
 			return -1 
-		elif b['price'] > $a['price'] : 
+		elif b['price'] > a['price'] :
 			return 1 
 		 
 		return 0 
 
 
 	def setBasketProductWithPrices(self, fieldName, basketContent, role = 'mainProduct', subRole = 'mainProduct') : 
-		if basketContent !== False and len($basketContent) != None : 
+		if basketContent != False and len(basketContent) != None :
 			 
 			# Sort basket content by price 
 
@@ -234,7 +235,7 @@ class BxRequest:
 			_contextItem.contextItemId = _basketItem['id'] 
 			_contextItem.role = role 
  
-			self.contextItems[] = _contextItem 
+			self.contextItems.append( _contextItem )
  
 			for _basketItem in _basketContent: 
 				_contextItem = ContextItem() 
@@ -242,7 +243,7 @@ class BxRequest:
 				_contextItem.fieldName = fieldName 
 				_contextItem.contextItemId = _basketItem['id'] 
 				_contextItem.role = subRole 
-				self.contextItems[] = _contextItem 
+				self.contextItems.append( _contextItem )
 			 
 	 
 	 

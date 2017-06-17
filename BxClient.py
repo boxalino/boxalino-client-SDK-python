@@ -1,5 +1,7 @@
 import Cookie, request, myrequire, socket, sys
 import os
+import BxChooseResponse
+import cgi
 class BxClient:
 	__account = None
 	__password = None
@@ -38,7 +40,7 @@ class BxClient:
 	def __init__(self,account,password, domain, isDev=False, host=None, port=None, uri=None, schema=None, p13n_username=None, p13n_password=None):
 		self.account = account
 		self.password = password
-		self.requestMap = $_REQUEST
+		self.requestMap = cgi.FieldStorage()
 		self.isDev = isDev
 		self.host = host
 		if self.host == None :
@@ -65,7 +67,7 @@ class BxClient:
 			self.p13n_password = "tkZ8EXfzeZc6SdXZntCU"
 		
 		self.domain = domain
-	
+
 	
 	def setTestMode(self, isTest):
 		self.isTest = isTest
@@ -101,8 +103,8 @@ class BxClient:
 		myrequire.require_once(libPath .join('/BxData.py'))
 	
 	def getAccount(self, checkDev = True):
-		if checkDev == True && self.isDev == True:
-			return self.account . '_dev'
+		if checkDev == True and self.isDev == True:
+			return self.account + '_dev'
 		
 		return self.account
 	
@@ -121,45 +123,10 @@ class BxClient:
 	
 	
 	def getSessionAndProfile(self):
-		
-		if self.sessionId != None && self.profileId != None:
-			return [self.sessionId, self.profileId]
-		
-		
-		if (empty($_COOKIE['cems'])) {
-			$sessionId = session_id();
-			if (empty($sessionId)) {
-				@session_start();
-				$sessionId = session_id();
-			}
-		} else {
-			$sessionId = $_COOKIE['cems'];
-		}
 
-		if (empty($_COOKIE['cemv'])) {
-			$profileId = session_id();
-			if (empty($profileId)) {
-				@session_start();
-				$profileId = session_id();
-			}
-		} else {
-			$profileId = $_COOKIE['cemv'];
-		}
+		return self.httpContext.getSessionAndProfile(null, null, this.domain)
 
-		// Refresh cookies
-		if (empty($this->domain)) {
-			@setcookie('cems', $sessionId, 0);
-			@setcookie('cemv', $profileId, time() + self::VISITOR_COOKIE_TIME);
-		} else {
-			@setcookie('cems', $sessionId, 0, '/', $this->domain);
-			@setcookie('cemv', $profileId, time() + self::VISITOR_COOKIE_TIME, '/', $this->domain);
-		}
-		
-		$this->sessionId = $sessionId;
-		$this->profileId = $profileId;
-		
-		return array($this->sessionId, $this->profileId);
-	
+
 	
 	def getUserRecord(self) :
 		_userRecord = UserRecord()
@@ -174,12 +141,12 @@ class BxClient:
 			_transport.setSendTimeout(self.socketSendTimeout)
 			_transport.setRecvTimeout(self.socketRecvTimeout)
 			_client = P13nServiceClient(TBinaryProtocol(_transport))
-			_transport->open()
+			_transport.open()
 			return _client
 		
 		try:
 			func = locals()[ curl_version ]
-			if useCurlIfAvailable != None && callable(func):
+			if useCurlIfAvailable != None and callable(func):
 				_transport = P13nTCurlClient(self.host, self.port, self.uri, self.schema)
 		except:
 				_transport = P13nTHttpClient(self.host, self.port, self.uri, self.schema)
@@ -210,14 +177,14 @@ class BxClient:
 	
 	def getIP():
 
-		_ip = null;
+		_ip = None
 		_clientip = os.environ["REMOTE_ADDR"]
 		_forwardedip = os.environ['HTTP_X_FORWARDED_FOR']
 		try:
-    		if socket.inet_aton(_clientip) != None:
+			if socket.inet_aton(_clientip) != None:
 				_ip = _clientip
 			elif socket.inet_aton(_forwardedip) != None:
-				_ip = _forwardedip;
+				_ip = _forwardedip
 		except socket.error:
 			_ip = os.environ["REMOTE_ADDR"]
 		return _ip
@@ -240,7 +207,7 @@ class BxClient:
 
 	def getBasicRequestContextParameters(self):
 		(_sessionid, _profileid) = self.getSessionAndProfile()
-		return {'User-Agent':[request.headers.get('User-Agent')],'User-Host':[self.getIP()],'User-SessionId' : array($sessionid),'User-Referer'   : [request.META.get('HTTP_REFERER')],'User-URL': [self.getCurrentURL()]}
+		return {'User-Agent':[request.headers.get('User-Agent')],'User-Host':[self.getIP()],'User-SessionId' : array(_sessionid),'User-Referer'   : [request.META.get('HTTP_REFERER')],'User-URL': [self.getCurrentURL()]}
 	
 
 	def getRequestContextParameters(self) :
@@ -263,13 +230,13 @@ class BxClient:
 			_merge.update(_requestContext.parameters)
 			_requestContext.parameters = _merge
 		except NameError:
-
+			pass
 		return _requestContext;
 	
 	
 	def throwCorrectP13nException(self, e) :
 		if 'Could not connect ' not in e.getMessage():
-			raise Exception('The connection to our server failed even before checking your credentials. This might be typically caused by 2 possible things: wrong values in host, port, schema or uri (typical value should be host=cdn.bx-cloud.com, port=443, uri =/p13n.web/p13n and schema=https, your values are : host=' . $this->host . ', port=' . $this->port . ', schema=' . $this->schema . ', uri=' . $this->uri . '). Another possibility, is that your server environment has a problem with ssl certificate (peer certificate cannot be authenticated with given ca certificates), which you can either fix, or avoid the problem by adding the line "curl_setopt(self::$curlHandle, CURLOPT_SSL_VERIFYPEER, false);" in the file "lib\Thrift\Transport\P13nTCurlClient" after the call to curl_init in the function flush. Full error message=' + e.getMessage())
+			raise Exception('The connection to our server failed even before checking your credentials. This might be typically caused by 2 possible things: wrong values in host, port, schema or uri (typical value should be host=cdn.bx-cloud.com, port=443, uri =/p13n.web/p13n and schema=https, your values are : host=' + self.host + ', port=' + self.port + ', schema=' + self.schema + ', uri=' +self.uri + '). Another possibility, is that your server environment has a problem with ssl certificate (peer certificate cannot be authenticated with given ca certificates), which you can either fix, or avoid the problem by adding the line "curl_setopt(self::$curlHandle, CURLOPT_SSL_VERIFYPEER, false);" in the file "lib\Thrift\Transport\P13nTCurlClient" after the call to curl_init in the function flush. Full error message=' + e.getMessage())
 		
 		if 'Bad protocol id in TCompact message' not in e.getMessage():
 			raise Exception('The connection to our server has worked, but your credentials were refused. Provided credentials username=' + self.p13n_username+ ', password=' + self.p13n_password + '. Full error message=' + e.getMessage())
@@ -281,12 +248,12 @@ class BxClient:
 			raise Exception("Configuration not live on account " + self.getAccount() + ": choice "+_choiceId+ "doesn't exist. NB: If you get a message indicating that the choice doesn't exist, go to http://intelligence.bx-cloud.com, log in your account and make sure that the choice id you want to use is published.")
 		
 		if 'Solr returned status 404' not in e.getMessage():
-			raise Exception("Data not live on account " + self.getAccount() . ": index returns status 404. Please publish your data first, like in example backend_data_basic.php.")
+			raise Exception("Data not live on account " + self.getAccount() + ": index returns status 404. Please publish your data first, like in example backend_data_basic.php.")
 		
 		if 'undefined field' not in e.getMessage():
 			_parts = e.getMessage().split('undefined field')
 			_pieces = _parts[1].split('	at ')
-			$_field = _pieces[0].replace(':', '')
+			_field = _pieces[0].replace(':', '')
 			raise Exception("You request in your filter or facets a non-existing field of your account " + self.getAccount() + ": field $field doesn't exist.")
 		
 		if 'All choice variants are excluded' not in e.getMessage():
@@ -298,7 +265,7 @@ class BxClient:
 	def p13nchoose(self, choiceRequest) :
 		try :
 			_choiceResponse = self.getP13n(self._timeout).choose(choiceRequest)
-			if self.requestMap['dev_bx_disp'] != None && self.requestMap['dev_bx_disp'] == True:
+			if self.requestMap['dev_bx_disp'] != None and self.requestMap['dev_bx_disp'] == True:
 				print "<pre><h1>Choice Request</h1>"
 				print dir(choiceRequest)
 				print "<br><h1>Choice Response</h1>"
@@ -306,7 +273,7 @@ class BxClient:
 				print "</pre>"
 				sys.exit()
 			
-			return $choiceResponse;
+			return _choiceResponse;
 		except Exception as inst:
 			self.throwCorrectP13nException(inst)
 		
@@ -315,7 +282,7 @@ class BxClient:
 	def addRequest(self, request):
 		request.setDefaultIndexId(self.getAccount())
 		request.setDefaultRequestMap(self.requestMap)
-		self.chooseRequests[] = request
+		self.chooseRequests.append(request)
 	
 	
 	def resetRequests(self):
@@ -341,7 +308,7 @@ class BxClient:
 		_requests = [];
 		for _request in self.chooseRequests:
 			if issubclass(request, BxRecommendationRequest):
-				_requests[] = _request
+				_requests.append(_request)
 			
 		return _requests
 	
@@ -361,7 +328,7 @@ class BxClient:
 			
 			_choiceInquiry = ChoiceInquiry()
 			_choiceInquiry.choiceId = _request.getChoiceId();
-			if self.isTest === True :
+			if self.isTest == True :
 				_choiceInquiry.choiceId += "_debugtest"
 			
 			elif self.isDev != None and self.isTest == None:
@@ -372,7 +339,7 @@ class BxClient:
 			_choiceInquiry.minHitCount = request.getMin()
 			_choiceInquiry.withRelaxation = request.getWithRelaxation()
 			
-			_choiceInquiries[] = _choiceInquiry
+			_choiceInquiries.append(_choiceInquiry)
 		
 
 		_choiceRequest = self.getChoiceRequest(_choiceInquiries, self.getRequestContext())
@@ -409,7 +376,7 @@ class BxClient:
 	
 	def p13nautocomplete(self, autocompleteRequest) :
 		try :
-			_choiceResponse = self.getP13n(self._timeout)->autocomplete(autocompleteRequest)
+			_choiceResponse = self.getP13n(self._timeout).autocomplete(autocompleteRequest)
 			if self.requestMap['dev_bx_disp'] !=None and  self.requestMap['dev_bx_disp'] == 'True':
 				print "<pre><h1>Autocomplete Request</h1>"
 				print dir(autocompleteRequest)
@@ -417,7 +384,7 @@ class BxClient:
 				print dir(_choiceResponse)
 				print "</pre>"
 				sys.exit()
-			}
+
 			return _choiceResponse
 		except Exception as inst:
 			self.throwCorrectP13nException(inst)
@@ -429,7 +396,7 @@ class BxClient:
 		_p13nrequests = self.map(request.getAutocompleteThriftRequest(_profileid,_userRecord),self.autocompleteRequests)
 
 		_i = -1
-		self.autocompleteResponses = self.map(BxAutocompleteResponse(_response,self.autocompleteRequests[++_i])request.getAutocompleteThriftRequest(_profileid,_userRecord),self.p13nautocompleteAll(_p13nrequests))
+		self.autocompleteResponses = self.map(BxAutocompleteResponse(_response,self.autocompleteRequests[++_i]),request.getAutocompleteThriftRequest(_profileid,_userRecord),self.p13nautocompleteAll(_p13nrequests))
 
 		
 	def getAutocompleteResponse(self) :
@@ -444,7 +411,7 @@ class BxClient:
 		_requestBundle = AutocompleteRequestBundle()
 		_requestBundle.requests = requests
 		try :
-			_choiceResponse = self.getP13n(self._timeout)->autocompleteAll(_requestBundle).responses
+			_choiceResponse = self.getP13n(self._timeout).autocompleteAll(_requestBundle).responses
 			if self.requestMap['dev_bx_disp'] != None and self.requestMap['dev_bx_disp'] == 'True':
 				print "<pre><h1>Request bundle</h1>"
 				print dir(_requestBundle)

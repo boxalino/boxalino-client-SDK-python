@@ -61,9 +61,9 @@ class BxFilter:
 	
 	def getThriftFilter(self) :
 		_filter = Filter()
-        _filter.fieldName = self.fieldName
-        _filter.negative = self.negative
-        _filter.stringValues = self.values
+		_filter.fieldName = self.fieldName
+		_filter.negative = self.negative
+		_filter.stringValues = self.values
 		if self.hierarchyId!=None:
 			_filter.hierarchyId = self.hierarchyId
 		

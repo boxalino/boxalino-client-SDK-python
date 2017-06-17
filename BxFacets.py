@@ -57,15 +57,15 @@ class BxFacets:
 		return fieldName not in self.getCategoryFieldName() 
 	
 
-    def getFacetParameterName(self, fieldName) :
+	def getFacetParameterName(self, fieldName) :
 		parameterName = fieldName
 		if self.isCategories(fieldName) :
 			parameterName = 'category_id'
 		
-        return self.parameterPrefix + parameterName
-    
-    def uasort(self, _a, _b):
-    	_aValue = int(self.getFacetExtraInfo(_a['fieldName'], 'order', _a['returnedOrder']))
+		return self.parameterPrefix + parameterName
+
+	def uasort(self, _a, _b):
+		_aValue = int(self.getFacetExtraInfo(_a['fieldName'], 'order', _a['returnedOrder']))
 		if(_aValue == 0) :
 			_aValue =  _a['returnedOrder']
 		
@@ -75,23 +75,23 @@ class BxFacets:
 		
 		return -1 if _aValue < _bValue else 1
 
-    def getFieldNames(self) :
+	def getFieldNames(self) :
 		fieldNames = {}
 		for _fieldName , _facet  in self.facets :
 			_facetResponse = self.getFacetResponse(_fieldName)
 			if _facetResponse.values.len() >0 :
 				fieldNames[_fieldName] = {'fieldName':_fieldName, 'returnedOrder': fieldNames.len()}
 		uasort(fieldNames, uasort)
-        return fieldNames.keys()
-    
+		return fieldNames.keys()
+
 	
 	def getDisplayFacets(self, display, default=False) :
 		selectedFacets = {}
 		for _fieldName in self.getFieldNames() :
-			if self.getFacetDisplay(_fieldName) == display 
-				selectedFacets[] = _fieldName
+			if self.getFacetDisplay(_fieldName) == display :
+				selectedFacets.append(_fieldName)
 			elif self.getFacetDisplay(_fieldName) == None and default== True :
-				selectedFacets[] = _fieldName
+				selectedFacets.append(_fieldName)
 		return selectedFacets
 	
 	
@@ -102,9 +102,9 @@ class BxFacets:
 				continue
 			
 			if self.getFacetExtraInfo(fieldName, extraInfoKey) == extraInfoValue  :
-				_selectedFacets[] = fieldName
+				_selectedFacets.append(fieldName)
 			elif  self.getFacetExtraInfo(fieldName, extraInfoKey) == None and default==True :
-				_selectedFacets[] = fieldName
+				_selectedFacets.append(fieldName)
 			
 		
 		return _selectedFacets
@@ -157,7 +157,7 @@ class BxFacets:
 	
 	
 	def prettyPrintLabel(self, label, prettyPrint=False) :
-		if prettyPrint=True :
+		if prettyPrint==True :
 			label = label.replace('_', ' ')
 			label = label.replace('products', '')
 			label = label.strip().capitalize()
@@ -242,15 +242,15 @@ class BxFacets:
 		return defaultDisplay
 	
 
-    def getFacetResponse(self, fieldName) :
-        if self.searchResult != None and self.searchResult.facetResponses != None :
+	def getFacetResponse(self, fieldName) :
+		if self.searchResult != None and self.searchResult.facetResponses != None :
 			for facetResponse in self.searchResult.facetResponses :
 				if facetResponse.fieldName == fieldName :
 					return facetResponse
 			raise Exception("trying to get facet response on unexisting fieldname " + fieldName)
 		
-        raise Exception("trying to get facet response but not facet response set")
-    
+		raise Exception("trying to get facet response but not facet response set")
+
 	
 	def getFacetType(self, fieldName) :
 		ttype = 'string'
@@ -265,7 +265,7 @@ class BxFacets:
 			parents = {}
 			for node in response :
 				if node.hierarchy.len()== 1 :
-					parents[] = node
+					parents.append(node)
 				
 			
 			if parents.len() == 1 :
@@ -274,7 +274,7 @@ class BxFacets:
 				children = {}
 				hitCountSum = 0
 				for parent in parents :
-					children[] = self.buildTree(self, response, parent.hierarchy,  parentLevel)
+					children.append(self.buildTree(self, response, parent.hierarchy,  parentLevel))
 					hitCountSum += children[children.len()-1]['node'].hitCount
 				
 				root = {}
@@ -295,8 +295,8 @@ class BxFacets:
 						allTrue = False
 					
 				
-				if allTrue= True :
-					children[] = self.buildTree(self, response, node.hierarchy, parentLevel+1)
+				if allTrue== True :
+					children.append(self.buildTree(self, response, node.hierarchy, parentLevel+1))
 				
 			
 		
@@ -308,7 +308,7 @@ class BxFacets:
 						allTrue = False
 					
 				
-				if allTrue= True :
+				if allTrue== True :
 					return {'node':node, 'children':children}
 				
 			
@@ -340,7 +340,9 @@ class BxFacets:
 			try :
 				val.selected 
 				val.stringValue 
-				selectedValues[] = str(val.stringValue)
+				selectedValues.append(str(val.stringValue))
+			except:
+				pass
 		return selectedValues
 	
 	
@@ -351,7 +353,7 @@ class BxFacets:
 			self.facets['category_id']
 			selectedCategoryId = self.facets['category_id']['selectedValues'][0]
 		except: 
-  			pass
+			pass
 		
 		if selectedCategoryId == None :
 			try :
@@ -396,8 +398,8 @@ class BxFacets:
 		if fieldName == "" :
 			return {}
 		
-        _facetValues = {}
-        _facetResponse = self.getFacetResponse(self, fieldName)
+		_facetValues = {}
+		_facetResponse = self.getFacetResponse(self, fieldName)
 		ttype = self.getFacetType(self,fieldName)
 		if ttype== 'hierarchical':
 			_tree = self.buildTree(self, _facetResponse.values)
@@ -458,15 +460,15 @@ class BxFacets:
 				_finalFacetValues[_k] = _v
 			
 			_facetValues = _finalFacetValues
-        return _facetValues
+		return _facetValues
 	
 	
 	def getSelectedValues(self, fieldName) :
 		_selectedValues = {}
-        try :
+		try :
 			for _key in self.getFacetValues(self,fieldName) :
 				if self.isFacetValueSelected(self, fieldName, _key) :
-					_selectedValues[] = _key
+					_selectedValues.append(_key)
 		except Exception as e:
 			
 			if self.facets[fieldName]['selectedValues'] :
@@ -518,12 +520,12 @@ class BxFacets:
 		return None
 	
 	def ksort(d):
-     	return [(k,d[k]) for k in sorted(d.keys(), reverse=True)]
+		return [(k,d[k]) for k in sorted(d.keys(), reverse=True)]
 
 	def getParentCategories(self) :
 		_fieldName = self.getCategoryFieldName(self)
 		_facetResponse = self.getFacetResponse(self, fieldName)
-		_tree = self.buildTree(self facetResponse.values)
+		_tree = self.buildTree(self.facetResponse.values)
 		_treeEnd = self.getSelectedTreeNode(self,tree)
 		if _treeEnd == None :
 			return {}
@@ -536,7 +538,7 @@ class BxFacets:
 		while _parent :
 			_parts = _parent['node'].stringValue.split('/')
 			if _parts[0] != 0 :
-				_parents[] = [_parts[0], _parts[_parts.len()-1]]
+				_parents.append([_parts[0], _parts[_parts.len()-1]])
 			
 			_parent = self.getTreeParent( self, _tree, _parent)
 		
@@ -615,12 +617,12 @@ class BxFacets:
 	
 
 	__lastSetMinCategoryLevel = 0
-    def getFacetValues(self, fieldName, ranking='alphabetical', minCategoryLevel=0) :
+	def getFacetValues(self, fieldName, ranking='alphabetical', minCategoryLevel=0) :
 		self.lastSetMinCategoryLevel = minCategoryLevel
 		return self.getFacetKeysValues(self,fieldName, ranking, minCategoryLevel).keys()
-    
+
 	def reset(tmp):
-    	return tmp[0]
+		return tmp[0]
 
 	def getFacetValueArray(self, fieldName, facetValue) :
 
@@ -632,7 +634,7 @@ class BxFacets:
 			return [_valueLabel, _paramValue, None, True, False]
 		
 
-        _keyValues = self.getFacetKeysValues(self, fieldName, 'alphabetical', self.lastSetMinCategoryLevel)
+		_keyValues = self.getFacetKeysValues(self, fieldName, 'alphabetical', self.lastSetMinCategoryLevel)
 
 		if isinstance(facetValue,list):
 			facetValue = reset(facetValue)
@@ -681,7 +683,7 @@ class BxFacets:
 
 	def getSelectedPriceRange(self):
 		_valueLabel = None
-		if self.selectedPriceValues !== None and self.selectedPriceValues != None:
+		if self.selectedPriceValues != None and self.selectedPriceValues != None:
 			_from = round(self.selectedPriceValues[0].rangeFromInclusive, 2)
 			_to = round(self.selectedPriceValues[0].rangeToExclusive, 2)
 			_valueLabel = _from + '-' + _to
@@ -694,9 +696,9 @@ class BxFacets:
 	
 
 	def getFacetValueLabel(self, fieldName, facetValue) :
-        (_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
+		(_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
 		return _label
-    
+
 	
 	def getCategoryValueCount(self,facetValue):
 		return self.getFacetValueCount(self.getCategoryFieldName(self),facetValue)
@@ -706,15 +708,15 @@ class BxFacets:
 		return self.getFacetValueCount(self.getPriceFieldName(self), facetValue)
 	
 
-    def getFacetValueCount(self,fieldName, facetValue) :
+	def getFacetValueCount(self,fieldName, facetValue) :
 		(_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
 		return _hitCount
-    
 
-    def isFacetValueHidden(self,fieldName, facetValue) :
+
+	def isFacetValueHidden(self,fieldName, facetValue) :
 		(_label, _parameterValue, _hitCount, _selected, _hidden) = self.getFacetValueArray(self,fieldName, facetValue)
 		return _hidden
-    
+
 	
 	def getCategoryValueId(self,facetValue) :
 		return self.getFacetValueParameterValue(self.getCategoryFieldName(self), facetValue)
@@ -724,18 +726,18 @@ class BxFacets:
 		return self.getFacetValueParameterValue(self.getPriceFieldName(self), facetValue)
 	
 
-    def getFacetValueParameterValue(self, fieldName, facetValue) :
-        (_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
+	def getFacetValueParameterValue(self, fieldName, facetValue) :
+		(_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
 		return _parameterValue
-    
+
 	
 	def isPriceValueSelected(self,facetValue) :
 		return self.isFacetValueSelected(self.getPriceFieldName(self), facetValue)
 	
 	
 	def isFacetValueSelected(self,fieldName, facetValue) :
-        (_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
-		return $selected
+		(_label, _parameterValue, _hitCount, _selected) = self.getFacetValueArray(self,fieldName, facetValue)
+		return _selected
 	
 
 	def getThriftFacets(self) :
@@ -777,30 +779,30 @@ class BxFacets:
 				_facetRequest.maxCount = -1
 
 				
-			_thriftFacets[] = _facetRequest
+			_thriftFacets.append(_facetRequest)
 		
 		
 		return _thriftFacets
 	
 
-    def facetSelectedValue(self, fieldName, option):
-        _selectedFacets = {}
+	def facetSelectedValue(self, fieldName, option):
+		_selectedFacets = {}
 		if self.facets[fieldName]['selectedValues'] :
-            for _value in self.facets[fieldName]['selectedValues'] :
-                _selectedFacet = FacetValue()
-                if option == 'ranged' :
-                    _rangedValue = _value.split('-')
-                    if _rangedValue[0] != '*' :
-                        _selectedFacet.rangeFromInclusive = _rangedValue[0]
-                    
-                    if _rangedValue[1] != '*' :
-                        _selectedFacet.rangeToExclusive = _rangedValue[1] + 0.01
-                else :
-                    _selectedFacet.stringValue = _value
-                _selectedFacets[] = _selectedFacet
-            return _selectedFacets
-        return
-    
+			for _value in self.facets[fieldName]['selectedValues'] :
+				_selectedFacet = FacetValue()
+				if option == 'ranged' :
+					_rangedValue = _value.split('-')
+					if _rangedValue[0] != '*' :
+						_selectedFacet.rangeFromInclusive = _rangedValue[0]
+
+					if _rangedValue[1] != '*' :
+						_selectedFacet.rangeToExclusive = _rangedValue[1] + 0.01
+				else :
+					_selectedFacet.stringValue = _value
+				_selectedFacets.append(_selectedFacet)
+			return _selectedFacets
+		return
+
 
 	def getParentId(self, fieldName, iid):
 		_hierarchy = {}
@@ -810,7 +812,7 @@ class BxFacets:
 				for _item in _response.values:
 					if _item.hierarchyId == iid:
 						_hierarchy = _item.hierarchy
-						if $hierarchy.len() < 4 :
+						if _hierarchy.len() < 4 :
 							return 1
 						
 				for _item in _response.values  :

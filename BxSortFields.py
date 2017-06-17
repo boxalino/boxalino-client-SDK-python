@@ -1,22 +1,22 @@
 class BxSortFields:
 
-	_sorts = [];
+	_sorts = {}
 
-    def __init__(self, field=None, reverse=false):
-    
+	def __init__(self, field=None, reverse=False ) :
+
 		if field!= None:
 			self.push(field, reverse)
 		
-    
 
-    def push(self, field, reverse=False):
-    
-        self.sorts[field] = reverse
-    
-    def getSortFields(self):
-    
+
+	def push(self, field, reverse=False):
+
+		self.sorts[field] = reverse
+
+	def getSortFields(self):
+
 		return self.sorts.keys()
-    
+
 	
 	def isFieldReverse(self, field):
 		try:
@@ -29,10 +29,7 @@ class BxSortFields:
 	def getThriftSortFields(self) :
 		_sortFields = {}
 		for _field  in self.getSortFields():
-			_sortFields[] = SortField({
-				'fieldName' = _field,
-				'reverse' = self.isFieldReverse(_field)
-			});
+			_sortFields.append(SortField({'fieldName' : _field,'reverse' : self.isFieldReverse(_field)}))
 		
 		return _sortFields
 	
