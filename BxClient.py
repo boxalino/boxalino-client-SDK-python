@@ -1,4 +1,6 @@
-import Cookie, request, myrequire, socket, sys
+import Cookie 
+import socket
+import sys
 import os
 import BxChooseResponse
 import cgi
@@ -89,18 +91,18 @@ class BxClient:
 		_cl = ThriftClassLoader(False)
 		_cl.registerNamespace('Thrift', libPath)
 		_cl.register(True)
-		myrequire.require_once(libPath .join('/P13nService.py'))
-		myrequire.require_once(libPath .join('/Types.py'))
-		myrequire.require_once(libPath .join('/BxFacets.py'))
-		myrequire.require_once(libPath .join('/BxRequest.py'))
-		myrequire.require_once(libPath .join('/BxRecommendationRequest.py'))
-		myrequire.require_once(libPath .join('/BxParametrizedRequest.py'))
-		myrequire.require_once(libPath .join('/BxSearchRequest.py'))
-		myrequire.require_once(libPath .join('/BxAutocompleteRequest.py'))
-		myrequire.require_once(libPath .join('/BxSortFields.py'))
-		myrequire.require_once(libPath .join('/BxChooseResponse.py'))
-		myrequire.require_once(libPath .join('/BxAutocompleteResponse.py'))
-		myrequire.require_once(libPath .join('/BxData.py'))
+		myrequire.require_once(libPath +'/P13nService.py')
+		myrequire.require_once(libPath +'/Types.py')
+		myrequire.require_once(libPath +'/BxFacets.py')
+		myrequire.require_once(libPath +'/BxRequest.py')
+		myrequire.require_once(libPath +'/BxRecommendationRequest.py')
+		myrequire.require_once(libPath +'/BxParametrizedRequest.py')
+		myrequire.require_once(libPath +'/BxSearchRequest.py')
+		myrequire.require_once(libPath +'/BxAutocompleteRequest.py')
+		myrequire.require_once(libPath +'/BxSortFields.py')
+		myrequire.require_once(libPath +'/BxChooseResponse.py')
+		myrequire.require_once(libPath +'/BxAutocompleteResponse.py')
+		myrequire.require_once(libPath +'/BxData.py')
 	
 	def getAccount(self, checkDev = True):
 		if checkDev == True and self.isDev == True:
@@ -212,7 +214,7 @@ class BxClient:
 
 	def getRequestContextParameters(self) :
 		_params = self.requestContextParameters
-		for _request in self.chooseRequests():
+		for _request in self.__chooseRequests():
 			for _k , _v in _request.getRequestContextParameters():
 				if isinstance(_v,list) == False:
 					_v = [_v]
@@ -282,21 +284,21 @@ class BxClient:
 	def addRequest(self, request):
 		request.setDefaultIndexId(self.getAccount())
 		request.setDefaultRequestMap(self.requestMap)
-		self.chooseRequests.append(request)
+		self.__chooseRequests.append(request)
 	
 	
 	def resetRequests(self):
-		self.chooseRequests = []
+		self.__chooseRequests = []
 	
 	
 	def getRequest(self, index=0) :
-		if self.chooseRequests.len() <= index:
+		if self.__chooseRequests.len() <= index:
 			return None
 		
-		return self.chooseRequests[index]
+		return self.__chooseRequests[index]
 
 	def getChoiceIdRecommendationRequest(self, choiceId):
-		for _request in self.chooseRequests:
+		for _request in self.__chooseRequests:
 			if _request.getChoiceId() == choiceId:
 				return _request;
 			
@@ -306,7 +308,7 @@ class BxClient:
 
 	def getRecommendationRequests(self):
 		_requests = [];
-		for _request in self.chooseRequests:
+		for _request in self.__chooseRequests:
 			if issubclass(request, BxRecommendationRequest):
 				_requests.append(_request)
 			
@@ -315,7 +317,7 @@ class BxClient:
 		
 	def getThriftChoiceRequest(self):
 		
-		if self.chooseRequests.len() == 0 and self.autocompleteRequests.len() > 0:
+		if self.__chooseRequests.len() == 0 and self.autocompleteRequests.len() > 0:
 			(_sessionid, _profileid) = self.getSessionAndProfile()
 			_userRecord = self.getUserRecord()
 			_p13nrequests = self.map(request.getAutocompleteThriftRequest(_profileid,_userRecord),self.autocompleteRequests)
@@ -324,7 +326,7 @@ class BxClient:
 		
 		_choiceInquiries = []
 		
-		for _request in chooseRequests:
+		for _request in self.__chooseRequests:
 			
 			_choiceInquiry = ChoiceInquiry()
 			_choiceInquiry.choiceId = _request.getChoiceId();
@@ -347,17 +349,17 @@ class BxClient:
 	
 	
 	def choose(self) :
-		self.chooseResponses = self.p13nchoose(self.getThriftChoiceRequest())
+		self.__chooseResponses = self.p13nchoose(self.getThriftChoiceRequest())
 	
 	
 	def flushResponses(self) :
-		self.chooseResponses = None
+		self.__chooseResponses = None
 	
 	
 	def getResponse(self) :
-		if self.chooseResponses!=None :
+		if self.__chooseResponses!=None :
 			self.choose()
-		return BxChooseResponse(self.chooseResponses, self.chooseRequests)
+		return BxChooseResponse.BxChooseResponse(self.__chooseResponses, self.__chooseRequests)
 	
 	
 	def setAutocompleteRequest(self, request):
@@ -408,7 +410,7 @@ class BxClient:
 	
 	
 	def p13nautocompleteAll(self, requests):
-		_requestBundle = AutocompleteRequestBundle()
+		_requestBundle = self.AutocompleteRequestBundle()
 		_requestBundle.requests = requests
 		try :
 			_choiceResponse = self.getP13n(self._timeout).autocompleteAll(_requestBundle).responses
@@ -430,6 +432,6 @@ class BxClient:
 		return self.autocompleteResponses
 	
 
-	def setTimeout(timeout) :
+	def setTimeout(self,timeout) :
 		self._timeout = timeout
 

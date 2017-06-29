@@ -1,3 +1,4 @@
+from p13n import ttypes
 class BxSortFields:
 
 	_sorts = {}
@@ -29,7 +30,7 @@ class BxSortFields:
 	def getThriftSortFields(self) :
 		_sortFields = {}
 		for _field  in self.getSortFields():
-			_sortFields.append(SortField({'fieldName' : _field,'reverse' : self.isFieldReverse(_field)}))
+			_sortFields.append(ttypes.SortField({'fieldName' : _field,'reverse' : self.isFieldReverse(_field)}))
 		
 		return _sortFields
 	

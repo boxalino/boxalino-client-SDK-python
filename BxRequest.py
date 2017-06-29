@@ -18,79 +18,79 @@ class BxRequest:
 	_bxFilters = None
 	_orFilters = False 
 	 
-	def __init__(language, choiceId, max=10, min=0) : 
+	def __init__(self, language, choiceId, max=10, min=0) :
 		if choiceId == '': 
 			raise Exception('BxRequest created with None choiceId') 
 		 
-		self.language = language 
-		self.choiceId = choiceId 
-		self.min = float(min) 
-		self.max = float(max) 
-		if self.max == 0: 
-			self.max = 1 
+		self._language = language
+		self._choiceId = choiceId
+		self._min = min
+		self._max = max
+		if self._max == 0:
+			self._max = 1
 		 
-		self.withRelaxation = choiceId == 'search' 
+		self._withRelaxation = choiceId == 'search'
 	 
 	 
 	def getWithRelaxation(self) : 
-		return self.withRelaxation 
+		return self._withRelaxation
 	 
 	 
 	def setWithRelaxation(self, withRelaxation) : 
-		self.withRelaxation = withRelaxation 
+		self._withRelaxation = withRelaxation
 	 
 	 
 	def getReturnFields(self) : 
-		return self.returnFields 
+		return self._returnFields
 	 
 	 
 	def setReturnFields(self, returnFields) : 
-		self.returnFields = returnFields 
+		self._returnFields = returnFields
 	 
 	 
 	def getOffset(self) : 
-		return self.offset 
+		return self._offset
 	 
 	 
 	def setOffset(self, offset) : 
-		self.offset = offset
+		self._offset = offset
 	 
 	 
 	def getQuerytext(self) : 
-		return self.queryText
+		return self._queryText
 	 
 	 
 	def setQuerytext(self, queryText) : 
-		self.queryText = queryText
+		self._queryText = queryText
 	 
 	 
 	def getFacets(self) :
-		return self.bxFacets 
+		return self._bxFacets
 	 
 	 
 	def setFacets(self, bxFacets) : 
-		self.bxFacets = bxFacets
+		self._bxFacets = bxFacets
 	 
 	 
 	def getSortFields(self) : 
-		return self.bxSortFields 
+		return self._bxSortFields
 	 
 	 
 	def setSortFields(self, bxSortFields) : 
-		self.bxSortFields = bxSortFields
+		self._bxSortFields = bxSortFields
 	 
 	 
 	def getFilters(self) : 
-		_filters = self.bxFilters 
-		if self.getFacets() != None: 
-			for _filter in self.getFacets().getFilters() : 
+		_filters = self._bxFilters
+		if BxRequest.getFacets(self) != None:
+			for _filter in self.getFacets().getFilters() :
 				_filters.append( _filter )
 		 
-		return self.bxFilters 
+		return self._bxFilters
 	 
 	 
 	def setFilters(self, bxFilters) : 
-		self.bxFilters = bxFilters
+		self._bxFilters = bxFilters
 	 
 	 
 	def addFilter(self , bxFilter) : 
@@ -137,27 +137,27 @@ class BxRequest:
 	 
  
 	def getIndexId(self) :
-		return self.indexId 
+		return self._indexId
 	 
 	 
 	def setIndexId(self, indexId) : 
-		self.indexId = indexId 
-		for _k, _contextItem in self.contextItems : 
-			if _contextItem.indexId == None : 
-				self.contextItems[_k].indexId = _indexId 
+		self._indexId = indexId
+		for _k, _contextItem in self.__contextItems :
+			if _contextItem._indexId == None :
+				self.__contextItems[_k]._indexId = _indexId
 			 
 		 
 	 
 	 
 	def setDefaultIndexId(self, indexId) : 
-		if self.indexId == None : 
+		if self._indexId == None :
 			self.setIndexId(indexId) 
 		 
 	 
 	 
 	def setDefaultRequestMap(self, requestMap) : 
-		if self.requestMap == None : 
-			self.requestMap = requestMap 
+		if self._requestMap == None :
+			self._requestMap = requestMap
 		 
 	 
  
@@ -180,14 +180,14 @@ class BxRequest:
 	def getSimpleSearchQuery(self) : 
 		 
 		_searchQuery = SimpleSearchQuery() 
-		_searchQuery.indexId = self.getIndexId() 
+		_searchQuery._indexId = self.getIndexId()
 		_searchQuery.language = self.getLanguage() 
 		_searchQuery.returnFields = self.getReturnFields() 
 		_searchQuery.offset = self.getOffset() 
 		_searchQuery.hitCount = self.getMax() 
 		_searchQuery.queryText = self.getQueryText() 
 		_searchQuery.groupBy = self.groupBy 
-		if self.getFilters().len() > 0 : 
+		if len(self.getFilters()) > 0 :
 			_searchQuery.filters = {} 
 			for _filter in self.getFilters() : 
 				_searchQuery.filters.append( _filter.getThriftFilter() )
@@ -205,11 +205,11 @@ class BxRequest:
 	__contextItems = {} 
 	def setProductContext(self, fieldName, contextItemId, role = 'mainProduct') : 
 		_contextItem = ContextItem() 
-		_contextItem.indexId = self.getIndexId() 
+		_contextItem._indexId = self.getIndexId()
 		_contextItem.fieldName = fieldName 
-		_contextItem.contextItemId = contextItemId 
+		_contextItem.__contextItemId = contextItemId
 		_contextItem.role = role 
-		self.contextItems.append( _contextItem )
+		self.__contextItems.append( _contextItem )
 	 
 	def usort(_a, _b):
 		if _a['price'] > _b['price'] : 
@@ -230,25 +230,25 @@ class BxRequest:
 			_basketItem = basketContent.pop(0) 
  
 			_contextItem = ContextItem() 
-			_contextItem.indexId = self.getIndexId() 
+			_contextItem._indexId = self.getIndexId()
 			_contextItem.fieldName = fieldName 
 			_contextItem.contextItemId = _basketItem['id'] 
 			_contextItem.role = role 
  
-			self.contextItems.append( _contextItem )
+			self.__contextItems.append( _contextItem )
  
 			for _basketItem in _basketContent: 
 				_contextItem = ContextItem() 
-				_contextItem.indexId = self.getIndexId() 
+				_contextItem._indexId = self.getIndexId()
 				_contextItem.fieldName = fieldName 
 				_contextItem.contextItemId = _basketItem['id'] 
 				_contextItem.role = subRole 
-				self.contextItems.append( _contextItem )
+				self.__contextItems.append( _contextItem )
 			 
 	 
 	 
 	def getContextItems(self) : 
-		return self.contextItems 
+		return self.__contextItems
 	 
 	 
 	def getRequestContextParameters(self) : 

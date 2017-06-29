@@ -7,8 +7,8 @@ import types
 import StringIO
 import urllib2
 import xml.etree.cElementTree as ET
-from phpserialize import serialize, unserialize
-class BxData:
+import pickle
+class BxData():
 
 	URL_VERIFY_CREDENTIALS = '/frontend/dbmind/en/dbmind/api/credentials/verify'
 	URL_XML = '/frontend/dbmind/en/dbmind/api/data/source/update'
@@ -21,12 +21,18 @@ class BxData:
 	_isDev = None
 	_isDelta = None
 	
-	_sources = []
-	
+
 	_host = 'http://di1.bx-cloud.com'
 	
 	_owner = 'bx_client_data_api'
 
+	class Tree(dict):
+		def __missing__(self, key):
+			value = self[key] = type(self)()
+			return value
+
+	_sources = Tree()
+	#_sourceIdContainers = Tree()
 	def __init__(self, bxClient, languages = [], isDev=False, isDelta=False):
 		self.bxClient = bxClient
 		self.languages = languages
@@ -37,51 +43,51 @@ class BxData:
 		self.languages = languages
 	
 	
-	def getLanguages() :
+	def getLanguages(self) :
 		return self.languages
 	
 	
 	def addMainCSVItemFile(self, filePath, itemIdColumn, encoding = 'UTF-8', delimiter = ',', enclosure = "\"", escape = "\\\\", lineSeparator = "\\n", sourceId = 'item_vals', container = 'products', validate=True) :
-		_sourceKey = self.addCSVItemFile(self, filePath, itemIdColumn, encoding, delimiter, enclosure, escape, lineSeparator, sourceId, container, validate)
-		self.addSourceIdField(self,_sourceKey, itemIdColumn, None, validate) 
-		self.addSourceStringField(self,_sourceKey, "bx_item_id", itemIdColumn, None, validate) 
+		_sourceKey = self.addCSVItemFile( filePath, itemIdColumn, encoding, delimiter, enclosure, escape, lineSeparator, sourceId, container, validate)
+		self.addSourceIdField(_sourceKey, itemIdColumn, None, validate)
+		self.addSourceStringField(_sourceKey, "bx_item_id", itemIdColumn, None, validate)
 		return _sourceKey
 	
 	
 	def addMainCSVCustomerFile(self, filePath, itemIdColumn, encoding = 'UTF-8', delimiter = ',', enclosure = "\&", escape = "\\\\", lineSeparator = "\\n", sourceId = 'customers', container = 'customers', validate=True) :
-		_sourceKey = self.addCSVItemFile(self, filePath, itemIdColumn, encoding, delimiter, enclosure, escape, lineSeparator, sourceId, container, validate)
-		self.addSourceIdField(self,_sourceKey, itemIdColumn, None, validate) 
-		self.addSourceStringField(self,_sourceKey, "bx_customer_id", itemIdColumn, None, validate) 
+		_sourceKey = self.addCSVItemFile( filePath, itemIdColumn, encoding, delimiter, enclosure, escape, lineSeparator, sourceId, container, validate)
+		self.addSourceIdField(_sourceKey, itemIdColumn, None, validate)
+		self.addSourceStringField(_sourceKey, "bx_customer_id", itemIdColumn, None, validate)
 		return _sourceKey
 	
 	
 	def addCSVItemFile(self, filePath, itemIdColumn, encoding = 'UTF-8', delimiter = ',', enclosure = "\&", escape = "\\\\", lineSeparator = "\\n", sourceId = None, container = 'products', validate=True) :
 		_params = {'itemIdColumn': itemIdColumn, 'encoding':encoding, 'delimiter':delimiter, 'enclosure':enclosure, 'escape':escape, 'lineSeparator':lineSeparator}
 		if sourceId == None :
-			sourceId = self.getFileNameFromPath(self, filePath, True)
-		
-		return self.addSourceFile(self, filePath, sourceId, container, 'item_data_file', 'CSV', _params, validate)
+			sourceId = self.getFileNameFromPath( filePath, True)
+		_result = self.addSourceFile( filePath, sourceId, container, 'item_data_file', 'CSV', _params, validate)
+		return _result
 	
 	
 	def addCSVCustomerFile(self, filePath, itemIdColumn, encoding = 'UTF-8', delimiter = ',', enclosure = "\&", escape = "\\\\", lineSeparator = "\\n", sourceId = None, container = 'customers', validate=True) :
 		_params = {'itemIdColumn':itemIdColumn, 'encoding':encoding, 'delimiter':delimiter, 'enclosure':enclosure, 'escape':escape, 'lineSeparator':lineSeparator}
 		if sourceId == None :
-			sourceId = self.getFileNameFromPath(self, filePath, True)
+			sourceId = self.getFileNameFromPath( filePath, True)
 		
-		return self.addSourceFile(self, filePath, sourceId, container, 'item_data_file', 'CSV', _params, validate)
+		return self.addSourceFile( filePath, sourceId, container, 'item_data_file', 'CSV', _params, validate)
 	
 	
 	def addCategoryFile(self, filePath, categoryIdColumn, parentIdColumn, categoryLabelColumns, encoding = 'UTF-8', delimiter = ',', enclosure = "\&", escape = "\\\\", lineSeparator = "\\n", sourceId = 'resource_categories', container = 'products', validate=True) :
 		_params = {'referenceIdColumn':categoryIdColumn, 'parentIdColumn':parentIdColumn, 'labelColumns':categoryLabelColumns, 'encoding':encoding, 'delimiter':delimiter, 'enclosure':enclosure, 'escape':escape, 'lineSeparator':lineSeparator}
-		return self.addSourceFile(self, filePath, sourceId,container, 'hierarchical', 'CSV', _params, validate)
+		return self.addSourceFile( filePath, sourceId,container, 'hierarchical', 'CSV', _params, validate)
 	
 	
 	def addResourceFile(self, filePath, categoryIdColumn, labelColumns, encoding = 'UTF-8', delimiter = ',', enclosure = "\&", escape = "\\\\", lineSeparator = "\\n", sourceId = None, container = 'products', validate=True) :
 		_params = {'referenceIdColumn':categoryIdColumn, 'labelColumns':labelColumns, 'encoding':encoding, 'delimiter':delimiter, 'enclosure':enclosure, 'escape':escape, 'lineSeparator':lineSeparator}
 		if sourceId == None :
-			sourceId = 'resource_' + self.getFileNameFromPath(self, filePath, True)
+			sourceId = 'resource_' + self.getFileNameFromPath( filePath, True)
 		
-		return self.addSourceFile(self, filePath, sourceId, container, 'resource', 'CSV', _params, validate)
+		return self.addSourceFile( filePath, sourceId, container, 'resource', 'CSV', _params, validate)
 	
 	
 	
@@ -90,7 +96,7 @@ class BxData:
 		
 		_params = {'encoding':encoding, 'delimiter':delimiter, 'enclosure':enclosure, 'escape':escape, 'lineSeparator':lineSeparator}
 		
-		_params['file'] = self.getFileNameFromPath(self, filePath)
+		_params['file'] = self.getFileNameFromPath( filePath , False)
 		_params['orderIdColumn'] = orderIdColumn
 		_params['productIdColumn'] = productIdColumn
 		_params['product_property_id'] = productIdField
@@ -101,26 +107,26 @@ class BxData:
 		_params['totalOrderValueColumn'] = totalOrderValueColumn
 		_params['orderReceptionDateColumn'] = orderDateIdColumn
 		
-		return self.addSourceFile(self, filePath, sourceId, container, 'transactions', format, _params, validate)
+		return self.addSourceFile( filePath, sourceId, container, 'transactions', format, _params, validate)
 	
 	
 	def addSourceFile(self, filePath, sourceId, container, type, format='CSV', params={}, validate=True) :
-		if self.getLanguages().len() == 0 :
+		if len(self.getLanguages()) == 0 :
 			raise Exception('trying to add a source before having declared the languages with method setLanguages')
 		try :
-			if self.sources[container] != None:
+			if self._sources[container] :
 				pass
-		except IndexError:
-			self.sources[container] = {}
-		_params['filePath'] = filePath
-		_params['format'] = format
-		_params['type'] = type
-		self.sources[container][sourceId] = _params
+		except KeyError:
+			self._sources[container] = []
+		params['filePath'] = filePath
+		params['format'] = format
+		params['type'] = type
+		self._sources[container][sourceId] = params
 		if validate == True :
-			self.validateSource(self, container, sourceId)
+			self.validateSource( container, sourceId)
 		
-		self.sourceIdContainers[sourceId] = container
-		return self.encodesourceKey(self, container,sourceId)
+		#self.sourceIdContainers[sourceId] = container
+		return self.encodesourceKey( container,sourceId)
 	
 	
 	def decodeSourceKey(self, sourceKey) :
@@ -135,150 +141,152 @@ class BxData:
 	def getSourceCSVRow(self, container, sourceId, row=0, maxRow = 2) :
 		
 		try :
-			self.sources[container][sourceId]['rows'] 
-		except IndexError:
-			_handle = fopen(self.sources[container][sourceId]['filePath'])
+			self._sources[container][sourceId]['rows']
+		except KeyError:
+			_handle = open(self._sources[container][sourceId]['filePath'])
 			if  _handle != False :
 				_count = 1
-				self.sources[container][sourceId]['rows'] = {}
-				_data = csv.reader(_handle, delimiter=',', quotechar='')
-				while _data != False :
-					self.sources[container][sourceId]['rows'].append( _data)
+				self._sources[container][sourceId]['rows'] = []
+				_data = csv.reader(_handle, delimiter=',', quotechar='"')
+				for _recordData in _data :
+					self._sources[container][sourceId]['rows'].append( _recordData)
 					_count +=1
 					if _count >= maxRow :
 						break
 					
-				_handle.close()
+				#_handle.close()
 		
-		if self.sources[container][sourceId]['rows'][row] != None :
-			return self.sources[container][sourceId]['rows'][row]
+		if self._sources[container][sourceId]['rows'][row] != None :
+			return self._sources[container][sourceId]['rows'][row]
 		return None
 	
 	
 	def validateSource(self, container, sourceId) :
-		_source = self.sources[container][sourceId]
+		_source = self._sources[container][sourceId]
 		if _source['format'] == 'CSV' :
-			if _source['itemIdColumn']!= None :
-				self.validateColumnExistance(self, container, sourceId, source['itemIdColumn'])
-			
+			try :
+				if _source['itemIdColumn']!= None :
+					self.validateColumnExistance( container, sourceId, _source['itemIdColumn'])
+			except KeyError:
+				pass
 	
 	def validateColumnExistance(self, container, sourceId, col) :
-		_row = self.getSourceCSVRow(self, container, sourceId, 0)
+		_row = self.getSourceCSVRow( container, sourceId, 0)
 		if _row != None and col not in _row :
-			raise Exception("the source '$sourceId' in the container '$container' declares an column '$col' which is not present in the header row of the provided CSV file: " + ','.join(_row))
+			raise Exception("the source "+sourceId+" in the container "+container+" declares an column "+col+" which is not present in the header row of the provided CSV file: " + ','.join(_row))
 		
 	
 	
 	def addSourceIdField(self, sourceKey, col, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, 'bx_id', "id", False, col, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, 'bx_id', "id", False, col, referenceSourceKey, validate)
 	
 	
 	def addSourceTitleField(self, sourceKey, colMap, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, "bx_title", "title", True, colMap, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, "bx_title", "title", True, colMap, referenceSourceKey, validate)
 	
 	
 	def addSourceDescriptionField(self, sourceKey, colMap, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, "bx_description", "body", True, colMap, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, "bx_description", "body", True, colMap, referenceSourceKey, validate)
 	
 	
 	def addSourceListPriceField(self, sourceKey, col, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, "bx_listprice", "price", False, col, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, "bx_listprice", "price", False, col, referenceSourceKey, validate)
 	
 	
 	def addSourceDiscountedPriceField(self, sourceKey, col, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self,sourceKey, "bx_discountedprice", "discounted", False, col, referenceSourceKey, validate)
+		self.addSourceField(sourceKey, "bx_discountedprice", "discounted", False, col, referenceSourceKey, validate)
 	
 	
 	def addSourceLocalizedTextField(self, sourceKey, fieldName, colMap, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, fieldName, "text", True, colMap, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, fieldName, "text", True, colMap, referenceSourceKey, validate)
 	
 	
 	def addSourceStringField(self, sourceKey, fieldName, col, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, fieldName, "string", False, col, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, fieldName, "string", False, col, referenceSourceKey, validate)
 	
 	
 	def addSourceNumberField(self, sourceKey, fieldName, col, referenceSourceKey=None, validate=True) :
-		self.addSourceField(self, sourceKey, fieldName, "number", False, col, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, fieldName, "number", False, col, referenceSourceKey, validate)
 	
 	
 	def setCategoryField(self, sourceKey, col, referenceSourceKey="resource_categories", validate=True) :
 		if referenceSourceKey == "resource_categories" :
-			(_container, _sourceId) = self.decodeSourceKey(self,sourceKey)
-			referenceSourceKey = self.encodesourceKey(self,container, referenceSourceKey)
+			(_container, _sourceId) = self.decodeSourceKey(sourceKey)
+			referenceSourceKey = self.encodesourceKey(_container, referenceSourceKey)
 		
-		self.addSourceField(self, sourceKey, "category", "hierarchical", False, col, referenceSourceKey, validate)
+		self.addSourceField( sourceKey, "category", "hierarchical", False, col, referenceSourceKey, validate)
 	
 	
 	def addSourceField(self, sourceKey, fieldName, type, localized, colMap, referenceSourceKey=None, validate=True) :
-		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
+		(_container, _sourceId) = self.decodeSourceKey( sourceKey)
 		try :
-			if self.sources[_container][_sourceId]['fields']!= None :
-				self.sources[_container][_sourceId]['fields'] = {}
-		except IndexError:
-			self.sources[_container][_sourceId]['fields'] = {}
+			if self._sources[_container][_sourceId]['fields'] :
+				pass
+		except KeyError:
+			self._sources[_container][_sourceId]['fields'] = {}
 
-		self.sources[_container][_sourceId]['fields'][fieldName] = {'type':type, 'localized':localized, 'map':colMap, 'referenceSourceKey':referenceSourceKey}
-		if self.sources[_container][_sourceId]['format'] == 'CSV' :
+		self._sources[_container][_sourceId]['fields'][fieldName] = {'type':type, 'localized':localized, 'map':colMap, 'referenceSourceKey':referenceSourceKey}
+		if self._sources[_container][_sourceId]['format'] == 'CSV' :
 			if localized and referenceSourceKey == None :
-				if isinstance(colMap,list)==False :
-					raise Exception(fieldName+': invalid column field name for a localized field (expect an array with a column name for each language array(lang:colName)): ' + serialize(colMap))
+				if isinstance(colMap,dict)==False :
+					raise Exception(fieldName+': invalid column field name for a localized field (expect an array with a column name for each language array(lang:colName)): ' + pickle.dumps(colMap))
 				
-				for _lang in self.getLanguages() :
+				for _lang in self.getLanguages().iteritems() :
 					try:
 						if colMap[_lang] != None :
 							pass
 					except :
-						raise Exception(fieldName+': no language column provided for language '+lang+' in provided column map): ' + serialize(colMap))
+						raise Exception(fieldName+': no language column provided for language '+lang+' in provided column map): ' + pickle.dumps(colMap))
 					
 					if isinstance(colMap[_lang], str)== False :
-						raise Exception(fieldName+': invalid column field name for a non-localized field (expect a string): ' + serialize(colMap))
+						raise Exception(fieldName+': invalid column field name for a non-localized field (expect a string): ' + pickle.dumps(colMap))
 					
 					if validate == True :
-						self.validateColumnExistance(self, container, sourceId, colMap[_lang])
+						self.validateColumnExistance( _container, _sourceId, colMap[_lang])
 					
 				
 			else:
 				if isinstance(colMap,str)==False :
-					raise Exception(fieldName+' invalid column field name for a non-localized field (expect a string): ' + serialize(colMap))
+					raise Exception(fieldName+' invalid column field name for a non-localized field (expect a string): ' + pickle.dumps(colMap))
 				
 				if validate== True :
-					self.validateColumnExistance(self, container, sourceId, colMap)
+					self.validateColumnExistance( _container, _sourceId, colMap)
 				
 	
 	def setFieldIsMultiValued(self, sourceKey, fieldName, multiValued = True) :
-		self.addFieldParameter(self, sourceKey, fieldName, 'multiValued', True if multiValued else 'False')
+		self.addFieldParameter( sourceKey, fieldName, 'multiValued', True if multiValued else 'False')
 	
 
 	def addSourceCustomerGuestProperty(self, sourceKey, parameterValue) :
-		self.addSourceParameter(self, sourceKey, "guest_property_id", parameterValue)
+		self.addSourceParameter( sourceKey, "guest_property_id", parameterValue)
 	
 
 	def addSourceParameter(self, sourceKey, parameterName, parameterValue) :
-		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
+		(_container, _sourceId) = self.decodeSourceKey( sourceKey)
 		try:
-			if self.sources[_container][_sourceId] != None:
+			if self._sources[_container][_sourceId] != None:
 				pass
 		except :
-			raise Exception("trying to add a source parameter on sourceId '$sourceId', container "+_container+" while this source doesn't exist")
+			raise Exception("trying to add a source parameter on sourceId "+_sourceId+", container "+_container+" while this source doesn't exist")
 		
-		self.sources[_container][_sourceId][parameterName] = parameterValue
+		self._sources[_container][_sourceId][parameterName] = parameterValue
 	
 
 	def addFieldParameter(self, sourceKey, fieldName, parameterName, parameterValue) :
-		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
+		(_container, _sourceId) = self.decodeSourceKey( sourceKey)
 		try:
-			if self.sources[_container][_sourceId]['fields'][fieldName] != None:
+			if self._sources[_container][_sourceId]['fields'][fieldName] != None:
 				pass
 		except IndexError:
 			raise ("trying to add a field parameter on sourceId "+_sourceId+", container "+_container+", fieldName "+_fieldName+" while this field doesn't exist")
 		
 		try:
-			if self.sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] != None:
+			if self._sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] != None:
 				pass
 		except IndexError:
-			self.sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] = {}
+			self._sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] = {}
 		
-		self.sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'][parameterName] = parameterValue
+		self._sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'][parameterName] = parameterValue
 	
 	
 	_ftpSources = {}
@@ -309,8 +317,8 @@ class BxData:
 		_params['Name'] = user + " at " + host
 		_params['RemoteDir'] = remoteDir
 		_params['SyncBrowsing'] = syncBrowsing
-		(_container, _sourceId) = self.decodeSourceKey(self, sourceKey)
-		self.ftpSources[_sourceId] = _params
+		(_container, _sourceId) = self.decodeSourceKey( sourceKey)
+		self._ftpSources[_sourceId] = _params
 	
 	
 	def getXML(self) :
@@ -318,31 +326,24 @@ class BxData:
 		root = ET.Element("root")
 		
 		languages = ET.SubElement(root, "languages")
-		for _lang in self.getLanguages(): 
-			ET.SubElement(language, "language", id=_lang)
+		for _lang in self.getLanguages():
+			ET.SubElement(languages, "language", id=_lang)
 
 		containers = ET.SubElement(root, "containers")
-		for _containerName , _containerSources in self.sources():
+		for _containerName , _containerSources in self._sources.iteritems():
 			
 			container = ET.SubElement(containers, "container", id=_containerName, type=_containerName)
-			
+
 			sources = ET.SubElement(container , 'sources')
 			properties = ET.SubElement(container, 'properties')
 
-			for _sourceId , _sourceValues in _containerSources ():
+			for _sourceId , _sourceValues in _containerSources.iteritems():
 				
-				try:
-					if _sourceValues['additional_item_source'] != None :
-						source = ET.SubElement(sources , 'source' , id=_sourceId, type=_sourceValues['type'] , additional_item_source=_sourceValues['additional_item_source'])
-					
-				except IndexError:
-					source = ET.SubElement(sources , 'source' , id=_sourceId, type=_sourceValues['type'])				
-					
+				source = ET.SubElement(sources , 'source' , id=_sourceId, type=_sourceValues['type'] )
 				
-				_sourceValues['file'] = self.getFileNameFromPath(_sourceValues['filePath'])
+				_sourceValues['file'] = self.getFileNameFromPath(_sourceValues['filePath'], False)
 				
-				_parameters = []
-				_parameters.append({'file':False, 'format':'CSV', 'encoding':'UTF-8', 'delimiter':',', 'enclosure':'"', 'escape':'\\\\', 'lineSeparator':"\\n" })
+				_parameters = {'file':False, 'format':'CSV', 'encoding':'UTF-8', 'delimiter':',', 'enclosure':'"', 'escape':'\\\\', 'lineSeparator':"\\n" }
 				
 				if _sourceValues['type'] == 'item_data_file':
 					_parameters['itemIdColumn'] = False				
@@ -369,7 +370,7 @@ class BxData:
 					
 				
 				
-				for _parameter , _defaultValue in _parameters():
+				for _parameter , _defaultValue in _parameters.iteritems():
 					try:
 						_value = _sourceValues[_parameter]
 					except IndexError:
@@ -398,18 +399,18 @@ class BxData:
 								ET.SubElement(source , _parameter).set('guest_property_id', _sourceValues['guest_property_id']);
 							except :
 								pass
-				if self.ftpSources[_sourceId]!=None :
+				if self._ftpSources[_sourceId]!=None :
 					
 					ET.SubElement(source , 'location').set('type', 'ftp');
 					
 					ftp = ET.SubElement(source , 'ftp').set('name', 'ftp');
 					
-					for _ftpPn , _ftpPv in self.ftpSources[_sourceId]:
+					for _ftpPn , _ftpPv in self._ftpSources[_sourceId].iteritems():
 						ftp._ftpPn = _ftpPv
 					
 				
 				if _sourceValues['fields']!=None :
-					for _fieldId , _fieldValues in _sourceValues['fields'] :
+					for _fieldId , _fieldValues in _sourceValues['fields'].iteritems() :
 						
 						_property = ET.SubElement(properties, "property", id=_fieldId, type=_fieldValues['type'])
 						
@@ -455,8 +456,8 @@ class BxData:
 							
 						except IndexError:
 							pass
-		tree = ET.ElementTree(root)
-		return tree.write("filename.xml")
+		_tree = ET.ElementTree(root)
+		return _tree.write("filename.xml")
 		
 
 	def callAPI(self, fields, url, temporaryFilePath=None):
@@ -511,13 +512,16 @@ class BxData:
 	
 	def pushDataSpecifications(self, ignoreDeltaException=False) :
 		
-		if ignoreDeltaException != None and self.isDelta!= None :
+		if ignoreDeltaException == True and self.isDelta == False :
 			raise Exception("You should not push specifications when you are pushing a delta file. Only do it when you are preparing full files. Set method parameter ignoreDeltaException to True to ignore this exception and publish anyway.")
-		
-		
-		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'xml' : self.getXML()}
+		fields={}
+		fields['username'] = self.bxClient.getUsername()
+		fields['password'] = self.bxClient.getPassword()
+		fields['account'] = self.bxClient.getAccount(False)
+		fields['owner'] = self._owner
+		fields['xml'] = self.getXML()
 
-		url = self.host + self.URL_XML
+		url = self._host + self.URL_XML
 		return self.callAPI(fields, url)
 	
 	
@@ -533,22 +537,22 @@ class BxData:
 		if self.isDev!= None :
 			publish = False
 		
-		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'publish' : ( 'True' if publish else 'False')}
+		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self._owner,'publish' : ( 'True' if publish else 'False')}
 
-		url = self.host + self.URL_PUBLISH_CONFIGURATION_CHANGES
+		url = self._host + self.URL_PUBLISH_CONFIGURATION_CHANGES
 		return self.callAPI(fields, url)
 	
 	
 	def verifyCredentials(self) :
-		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner}
+		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self._owner}
 
 		url = self.host + self.URL_VERIFY_CREDENTIALS
 		return self.callAPI(fields, url)
 	
 	
-	def getFileNameFromPath(filePath, withoutExtension=False) :
+	def getFileNameFromPath(self, filePath, withoutExtension=False) :
 		parts = filePath.split('/')
-		file = parts[parts.len()-1]
+		file = parts[len(parts)-1]
 		if withoutExtension== True :
 			parts = file.split('.')
 			return parts[0]
@@ -558,9 +562,9 @@ class BxData:
 	
 	def getFiles(self) :
 		files = {}
-		for _container , _containerSources in self.sources:
+		for _container , _containerSources in self._sources:
 			for _sourceId , _sourceValues in _containerSources  :
-				if self.ftpSources[_sourceId]!= None :
+				if self._ftpSources[_sourceId]!= None :
 					continue
 				
 				if _sourceValues['file']== None :
@@ -609,7 +613,7 @@ class BxData:
 		
 		zipFile = self.createZip(temporaryFilePath)
 		
-		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self.owner,'dev' : 'True' if self.isDev else 'False','delta' : 'True' if self.isDelta else 'False','data' : self.getCurlFile(zipFile, "application/zip")}
+		fields = {'username' : self.bxClient.getUsername(),'password' : self.bxClient.getPassword(),'account' : self.bxClient.getAccount(False),'owner' : self._owner,'dev' : 'True' if self.isDev else 'False','delta' : 'True' if self.isDelta else 'False','data' : self.getCurlFile(zipFile, "application/zip")}
 
 		url = self.host + self.URL_ZIP
 		return self.callAPI(self, fields, url,temporaryFilePath)
@@ -627,7 +631,7 @@ class BxData:
 
 	
 	def getTaskExecuteUrl(self, taskName) :
-		return self.host + self.URL_EXECUTE_TASK + '?iframeAccount=' + self.bxClient.getAccount() + '&task_process=' + taskName
+		return self._host + self.URL_EXECUTE_TASK + '?iframeAccount=' + self.bxClient.getAccount() + '&task_process=' + taskName
 	
 	
 	def publishChoices(self, isTest = False, taskName="generate_optimization") :
@@ -639,20 +643,20 @@ class BxData:
 			taskName += '_test'
 		
 		url = self.getTaskExecuteUrl(taskName)
-		file_get_contents(url)
+		self.file_get_contents(url)
 	
 	
 	def prepareCorpusIndex(self, taskName="corpus") :
 		url = self.getTaskExecuteUrl(taskName)
-		file_get_contents(url)
+		self.file_get_contents(url)
 	
 	
 	def prepareAutocompleteIndex(self, fields, taskName="autocomplete") :
 		url = self.getTaskExecuteUrl(taskName)
-		file_get_contents(url)
+		self.file_get_contents(url)
 	
 
-	def file_get_contents(filename, use_include_path = 0, context = None, offset = -1, maxlen = -1):
+	def file_get_contents(self,filename, use_include_path = 0, context = None, offset = -1, maxlen = -1):
 		if (filename.find('://') > 0):
 			ret = urllib2.urlopen(filename).read()
 			if (offset > 0):

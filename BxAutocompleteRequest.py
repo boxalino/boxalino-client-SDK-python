@@ -1,4 +1,4 @@
-
+import BxSearchRequest
 class BxAutocompleteRequest:
 	_language =None
 	_queryText =None
@@ -20,7 +20,7 @@ class BxAutocompleteRequest:
 		if autocompleteChoiceId == None:
 			autocompleteChoiceId = 'autocomplete';
 		self._choiceId = autocompleteChoiceId;
-		self._bxSearchRequest =  BxSearchRequest(language, queryText, productSuggestionHitCount, searchChoiceId);
+		self._bxSearchRequest =  BxSearchRequest.BxSearchRequest(language, queryText, productSuggestionHitCount, searchChoiceId);
 
 	def getBxSearchRequest(self):
 		return self._bxSearchRequest

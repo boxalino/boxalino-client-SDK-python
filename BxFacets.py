@@ -45,7 +45,7 @@ class BxFacets:
 		if selectedValue!= None:
 			_selectedValues = selectedValue if isinstance(selectedValue, list) else  [selectedValue]
 		
-		self.facets[fieldName] = {'label':label, 'type':ttype, 'order':order, 'selectedValues':_selectedValues, 'boundsOnly':boundsOnly, 'maxCount':maxCount}
+		self._facets[fieldName] = {'label':label, 'type':ttype, 'order':order, 'selectedValues':_selectedValues, 'boundsOnly':boundsOnly, 'maxCount':maxCount}
 
 	
 	
@@ -77,11 +77,11 @@ class BxFacets:
 
 	def getFieldNames(self) :
 		fieldNames = {}
-		for _fieldName , _facet  in self.facets :
+		for _fieldName , _facet  in self._facets :
 			_facetResponse = self.getFacetResponse(_fieldName)
 			if _facetResponse.values.len() >0 :
 				fieldNames[_fieldName] = {'fieldName':_fieldName, 'returnedOrder': fieldNames.len()}
-		uasort(fieldNames, uasort)
+		self.uasort(fieldNames, uasort)
 		return fieldNames.keys()
 
 	
@@ -167,8 +167,8 @@ class BxFacets:
 	
 	
 	def getFacetLabel(self, fieldName, language=None, defaultValue=None, prettyPrint=False) :
-		if self.facets[fieldName]!= None :
-			defaultValue = self.facets[fieldName]['label']
+		if self._facets[fieldName]!= None :
+			defaultValue = self._facets[fieldName]['label']
 		
 		if defaultValue == None :
 			defaultValue = fieldName
@@ -254,8 +254,8 @@ class BxFacets:
 	
 	def getFacetType(self, fieldName) :
 		ttype = 'string'
-		if self.facets[fieldName]!= None :
-			ttype = self.facets[fieldName]['type']
+		if self._facets[fieldName]!= None :
+			ttype = self._facets[fieldName]['type']
 		
 		return ttype
 	
@@ -350,8 +350,8 @@ class BxFacets:
 		selectedCategoryId = None
 		
 		try :
-			self.facets['category_id']
-			selectedCategoryId = self.facets['category_id']['selectedValues'][0]
+			self._facets['category_id']
+			selectedCategoryId = self._facets['category_id']['selectedValues'][0]
 		except: 
 			pass
 		
@@ -424,7 +424,7 @@ class BxFacets:
 			_ranking = 'alphabetical'
 		
 		if _ranking == 'counter' :
-			uasort(_facetValues, uasortGetFacetKeysValue)
+			self.uasort(_facetValues, uasortGetFacetKeysValue)
 		
 		
 		_displaySelectedValues = self.getFacetExtraInfo(self, fieldName, "displaySelectedValues")
@@ -471,13 +471,13 @@ class BxFacets:
 					_selectedValues.append(_key)
 		except Exception as e:
 			
-			if self.facets[fieldName]['selectedValues'] :
-				return self.facets[fieldName]['selectedValues']
+			if self._facets[fieldName]['selectedValues'] :
+				return self._facets[fieldName]['selectedValues']
 		return _selectedValues
 	
 	
 	def getFacetByFieldName(self, fieldName) :
-		for _fn , _facet in self.facets :
+		for _fn , _facet in self._facets :
 			if fieldName == _fn :
 				return _facet
 		return None
@@ -503,7 +503,7 @@ class BxFacets:
 				tree = self.getSelectedTreeNode(self, tree)
 				return tree and tree['node'].hierarchy.len()>1
 			
-			return self.facets[fieldName]['selectedValues'] and self.facets[fieldName]['selectedValues'].len() > 0
+			return self._facets[fieldName]['selectedValues'] and self._facets[fieldName]['selectedValues'].len() > 0
 		
 		return False
 	
@@ -588,8 +588,8 @@ class BxFacets:
 				return _parts[parts.len()-1]
 			
 			if _facet['type'] == 'ranged' :
-				if self.facets[fieldName]['selectedValues'][0] :
-					return self.facets[fieldName]['selectedValues'][0]
+				if self._facets[fieldName]['selectedValues'][0] :
+					return self._facets[fieldName]['selectedValues'][0]
 			if _facet['selectedValues'][0] :
 				return _facet['selectedValues'][0]
 			return ""
@@ -744,7 +744,7 @@ class BxFacets:
 		
 		_thriftFacets = {}
 		
-		for _fieldName , _facet in self.facets :
+		for _fieldName , _facet in self._facets :
 			ttype = _facet['type']
 			_order = _facet['order']
 			_maxCount = _facet['maxCount']
@@ -787,8 +787,8 @@ class BxFacets:
 
 	def facetSelectedValue(self, fieldName, option):
 		_selectedFacets = {}
-		if self.facets[fieldName]['selectedValues'] :
-			for _value in self.facets[fieldName]['selectedValues'] :
+		if self._facets[fieldName]['selectedValues'] :
+			for _value in self._facets[fieldName]['selectedValues'] :
 				_selectedFacet = FacetValue()
 				if option == 'ranged' :
 					_rangedValue = _value.split('-')

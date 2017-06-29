@@ -1,4 +1,5 @@
 from BxRequest import *
+import BxFacets
 class BxParametrizedRequest(BxRequest):
 
 	_bxReturnFields = ['id']
@@ -11,63 +12,63 @@ class BxParametrizedRequest(BxRequest):
 	_requestReturnFieldsName = "bxrf"
 	
 	def __init__(self, language, choiceId, max=10, min=0, bxReturnFields=None, getItemFieldsCB=None):
-		super(Instructor, self).__init__(language, choiceId, max,min )
+		BxRequest.__init__(self,language, choiceId, max,min )
 		
-		if _bxReturnFields != None:
-			self.bxReturnFields = bxReturnFields
+		if bxReturnFields != None:
+			self._bxReturnFields = bxReturnFields
 		
-		self.getItemFieldsCB = getItemFieldsCB
+		self._getItemFieldsCB = getItemFieldsCB
 	
 	
 	def setRequestParametersPrefix(self, requestParametersPrefix) :
-		self.requestParametersPrefix = requestParametersPrefix
+		self._requestParametersPrefix = requestParametersPrefix
 	
 	
 	def getRequestParametersPrefix(self) :
-		return self.requestParametersPrefix
+		return self._requestParametersPrefix
 	
 	
 	def setRequestWeightedParametersPrefix(self, requestWeightedParametersPrefix) :
-		self.requestWeightedParametersPrefix = requestWeightedParametersPrefix
+		self._requestWeightedParametersPrefix = requestWeightedParametersPrefix
 	
 	
 	def getRequestWeightedParametersPrefix(self) :
-		return self.requestWeightedParametersPrefix
+		return self._requestWeightedParametersPrefix
 	
 	
 	def setRequestFiltersPrefix(self, requestFiltersPrefix) :
-		self.requestFiltersPrefix = requestFiltersPrefix
+		self._requestFiltersPrefix = requestFiltersPrefix
 	
 	
 	def getRequestFiltersPrefix(self) :
-		return self.requestFiltersPrefix
+		return self._requestFiltersPrefix
 	
 	
 	def setRequestFacetsPrefix(self, requestFacetsPrefix) :
-		self.requestFacetsPrefix = requestFacetsPrefix
+		self._requestFacetsPrefix = requestFacetsPrefix
 	
 	
 	def getRequestFacetsPrefix(self) :
-		return self.requestFacetsPrefix
+		return self._requestFacetsPrefix
 	
 	
 	def setRequestSortFieldPrefix(self, requestSortFieldPrefix) :
-		self.requestSortFieldPrefix = requestSortFieldPrefix
+		self._requestSortFieldPrefix = requestSortFieldPrefix
 	
 	
 	def getRequestSortFieldPrefix(self) :
-		return self.requestSortFieldPrefix
+		return self._requestSortFieldPrefix
 	
 	
 	def setRequestReturnFieldsName(self, requestReturnFieldsName) :
-		self.requestReturnFieldsName = requestReturnFieldsName
+		self._requestReturnFieldsName = requestReturnFieldsName
 	
 	
 	def getRequestReturnFieldsName(self) :
-		return self.requestReturnFieldsName
+		return self._requestReturnFieldsName
 	
 	def getPrefixes(self) :
-		return [self.requestParametersPrefix , self.requestWeightedParametersPrefix, self.requestFiltersPrefix, self.requestFacetsPrefix, self.requestSortFieldPrefix]
+		return [self._requestParametersPrefix , self._requestWeightedParametersPrefix, self._requestFiltersPrefix, self._requestFacetsPrefix, self._requestSortFieldPrefix]
 	
 	
 	def matchesPrefix(self , string, prefix, checkOtherPrefixes=True) :
@@ -83,7 +84,7 @@ class BxParametrizedRequest(BxRequest):
 	
 	def getPrefixedParameters(self, prefix, checkOtherPrefixes=True) :
 		_params = {}
-		for _k , _v in self.requestMap:
+		for _k , _v in self._requestMap:
 			if self.matchesPrefix(_k, prefix, checkOtherPrefixes) != None:
 				_params[_k[prefix.len():]] = _v
 		
@@ -95,22 +96,22 @@ class BxParametrizedRequest(BxRequest):
 			_params[_name] = _values
 		
 		for _name , _values in self.getPrefixedParameters(self.requestParametersPrefix, False):
-			if self.requestWeightedParametersPrefix in _name:
+			if self._requestWeightedParametersPrefix in _name:
 				continue
-			if self.requestFiltersPrefix in _name:
+			if self._requestFiltersPrefix in _name:
 				continue
-			if self.requestFacetsPrefix in _name:
+			if self._requestFacetsPrefix in _name:
 				continue
-			if self.requestSortFieldPrefix in _name:
+			if self._requestSortFieldPrefix in _name:
 				continue
-			if _name == self.requestReturnFieldsName:
+			if _name == self._requestReturnFieldsName:
 				continue
 			_params[_name] = _values
 		return _params
 	
 	def getWeightedParameters(self) :
 		_params = {}
-		for _name , _values in self.getPrefixedParameters(self.requestWeightedParametersPrefix):
+		for _name , _values in self.getPrefixedParameters(self._requestWeightedParametersPrefix):
 			_pieces = _name.split('_')
 			_fieldValue = ""
 			if _pieces.len() > 0:
@@ -129,50 +130,52 @@ class BxParametrizedRequest(BxRequest):
 	
 	
 	def getFilters(self) :
-		_filters = super(Instructor, self).getFilters()
-		for _fieldName , _value in self.getPrefixedParameters(self.requestFiltersPrefix):
-			_negative = False
-			if '!' not in _value :
-				_negative = True
-				_value = _value[1:]
-			
-			_filters.append(BxFilter(_fieldName, [_value], _negative))
+		_filters = BxRequest.getFilters(self)
+		_tempVar = self.getPrefixedParameters(self._requestFiltersPrefix)
+		if _tempVar:
+			for _fieldName , _value in _tempVar:
+				_negative = False
+				if '!' not in _value :
+					_negative = True
+					_value = _value[1:]
+
+				_filters.append(BxFilter(_fieldName, [_value], _negative))
 		return _filters
 	
 	
 	def getFacets(self) :
-		_facets = super(Instructor, self).getFacets()
+		_facets = BxRequest.getFacets(self)
 		if _facets == None:
-			_facets = BxFacets()
+			_facets = BxFacets.BxFacets()
 		
-		for _fieldName , _selectedValue  in self.getPrefixedParameters(self.requestFacetsPrefix):
+		for _fieldName , _selectedValue  in self.getPrefixedParameters(self._requestFacetsPrefix):
 			_facets.addFacet(_fieldName, _selectedValue)
 		return _facets
 	
 	
 	def getSortFields(self) :
-		_sortFields = super(Instructor, self).getSortFields()
+		_sortFields = BxRequest.getSortFields()
 		if _sortFields == None:
-			_sortFields = BxSortFields()
+			_sortFields = BxSortFields.BxSortFields()
 		
-		for _name , _value in self.getPrefixedParameters(self.requestSortFieldPrefix):
+		for _name , _value in self.getPrefixedParameters(self._requestSortFieldPrefix):
 			_sortFields.push(_name, _value)
 		
 		return _sortFields
 	
 	
 	def getReturnFields(self) :
-		_mergeArray = dict(super(Instructor, self).getReturnFields())
-		_mergeArray = update(self.bxReturnFields)
+		_mergeArray = dict(BxRequest.getReturnFields())
+		_mergeArray = update(self._bxReturnFields)
 		return list(set(_mergeArray))
 	
 	
 	def getAllReturnFields(self) :
-		_returnFields = selfgetReturnFields()
+		_returnFields = self.getReturnFields()
 		try :
-			if self.requestMap[self.requestReturnFieldsName]:
+			if self._requestMap[self._requestReturnFieldsName]:
 				_mergeArray = _returnFields
-				_mergeArray = update(self.requestMap[self.requestReturnFieldsName].split(','))
+				_mergeArray = update(self._requestMap[self._requestReturnFieldsName].split(','))
 				_returnFields = list(set(_mergeArray))
 		except IndexError:
 			pass
@@ -188,7 +191,7 @@ class BxParametrizedRequest(BxRequest):
 			for _item in items :
 				_ids.append(_item.values['id'][0])
 			
-			_itemFields = eval(self.getItemFieldsCB)(_ids, fields)
+			_itemFields = eval(self._getItemFieldsCB)(_ids, fields)
 			if isinstance(_itemFields, list):
 				self.callBackCache = _itemFields
 		return self.callBackCache
@@ -198,6 +201,6 @@ class BxParametrizedRequest(BxRequest):
 		try:
 			return _itemFields[item.values['id'][0]][field]
 		except Exception as e:
-			return super(Instructor, self).retrieveHitFieldValues(item, field, items, fields)
+			return BxRequest.retrieveHitFieldValues(item, field, items, fields)
 			
 	
