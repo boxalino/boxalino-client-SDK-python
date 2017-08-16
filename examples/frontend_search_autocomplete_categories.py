@@ -1,5 +1,5 @@
 import BxClient
-import BxSearchRequest
+import BxAutocompleteRequest
 import BxFacets
 
 _account = "csharp_unittest"

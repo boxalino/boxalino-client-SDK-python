@@ -12,16 +12,16 @@ class BxSortFields:
 
 	def push(self, field, reverse=False):
 
-		self.sorts[field] = reverse
+		self._sorts[field] = reverse
 
 	def getSortFields(self):
 
-		return self.sorts.keys()
+		return self._sorts.keys()
 
 	
 	def isFieldReverse(self, field):
 		try:
-			if self.sorts[field] != None :
+			if self._sorts[field] != None :
 				return True;
 		except IndexError:
 			return False

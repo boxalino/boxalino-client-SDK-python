@@ -1,6 +1,6 @@
 import BxClient, BxData
-_account = "boxalino_automated_tests"
-_password = "boxalino_automated_tests"
+_account = "csharp_unittest"
+_password = "csharp_unittest"
 _domain = ""
 _languages = ['en']
 _isDev = False

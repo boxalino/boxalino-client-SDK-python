@@ -1,5 +1,6 @@
 import json
 import BxFacets
+from p13n import ttypes
 class BxChooseResponse:
 	_response = None
 	_bxRequests = None
@@ -17,10 +18,10 @@ class BxChooseResponse:
 	
 	def getChoiceResponseVariant(self, choice=None, count= None):
 	
-		for _k , _bxRequest in self._bxRequests():
+		for _k , _bxRequest in enumerate(self._bxRequests):
 			if choice == None or choice == _bxRequest.getChoiceId():
-				if _count > 0:
-					_count-=1
+				if count > 0:
+					count-=1
 					continue
 				return self.getChoiceIdResponseVariant(_k);
 	
@@ -29,13 +30,13 @@ class BxChooseResponse:
 		try:
 			if _response.variants != None and _response.variants[id]:
 				return _response.variants[id]
-		except IndexError:
+		except:
 			pass
 		if type(_response).__name__ == 'SearchResult':
-			_variant = Variant()
+			_variant = BxChooseResponse.ttype.Variant()
 			_variant.searchResult = _response;
 			return _variant
-		raise Exception('no variant provided in choice response for variant id ' +id)
+		raise Exception('no variant provided in choice response for variant id ' ,id)
 		
 	
 	def getFirstPositiveSuggestionSearchResult(self, variant, maxDistance=10):

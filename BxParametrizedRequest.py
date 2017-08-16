@@ -154,9 +154,9 @@ class BxParametrizedRequest(BxRequest):
 	
 	
 	def getSortFields(self) :
-		_sortFields = BxRequest.getSortFields()
+		_sortFields = BxRequest.getSortFields(self)
 		if _sortFields == None:
-			_sortFields = BxSortFields.BxSortFields()
+			_sortFields = BxSortFields.BxSortFields(self)
 		
 		for _name , _value in self.getPrefixedParameters(self._requestSortFieldPrefix):
 			_sortFields.push(_name, _value)

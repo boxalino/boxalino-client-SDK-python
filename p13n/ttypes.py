@@ -4111,7 +4111,7 @@ class AutocompleteRequest(object):
         None,  # 107
         None,  # 108
         None,  # 109
-        (110, TType.LIST, 'propertyQueries', (TType.STRUCT, (PropertyQuery, PropertyQuery.thrift_spec), False), None, ),  # 110
+       # (110, TType.LIST, 'propertyQueries', (TType.STRUCT, (PropertyQuery, PropertyQuery.thrift_spec), False), None, ),  # 110
     )
 
     def __init__(self, userRecord=None, scope=thrift_spec[21][4], choiceId=None, profileId=None, requestContext=None, excludeVariantIds=None, autocompleteQuery=None, searchChoiceId=None, searchQuery=None, includeVariantIds=None, propertyQueries=None,):
@@ -4423,7 +4423,7 @@ class PropertyResult(object):
         None,  # 8
         None,  # 9
         None,  # 10
-        (11, TType.LIST, 'hits', (TType.STRUCT, (PropertyHit, PropertyHit.thrift_spec), False), None, ),  # 11
+#        (11, TType.LIST, 'hits', (TType.STRUCT, (PropertyHit, PropertyHit.thrift_spec), False), None, ),  # 11
         None,  # 12
         None,  # 13
         None,  # 14

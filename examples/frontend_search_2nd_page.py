@@ -28,18 +28,8 @@ try :
 	
 	#make the query to Boxalino server and get back the response for all requests (make sure you have added all your requests before calling getResponse; i.e.: do not push the first request, then call getResponse, then add a new request, then call getResponse again it wil not work; N.B.: if you need to do to separate requests call, then you cannot reuse the same instance of BxClient, but need to create a new one)
 	bxResponse = bxClient.getResponse()
-	
-	#loop on the recommended response hit ids and print them
-	_logs.append("recommendations of similar items:")
-	for _i , _iid in bxResponse.getHitIds(_choiceIdSimilar):
-		_logs.append(_i+": returned id "+_iid)
 
-	_logs.append("")
-
-	#retrieve the recommended responses object of the complementary request
-	_logs.append("recommendations of complementary items:")
-	#loop on the recommended response hit ids and print them
-	for _i , _iid in bxResponse.getHitIds(_choiceIdComplementary):
+	for _i , _iid in bxResponse.getHitIds():
 		_logs.append(_i+": returned id "+_iid)
 
 	if _print:

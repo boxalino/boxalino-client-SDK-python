@@ -20,7 +20,7 @@ try:
 	_hitCount = 10 #a maximum number of recommended result to return in one page
 
 	#//create similar recommendations request
-	bxRequest = BxRecommendationRequest.__init__(_language, _choiceId, _hitCount)
+	bxRequest = BxRecommendationRequest.BxRecommendationRequest(_language, _choiceId, _hitCount)
 	
 	#//indicate the products the user currently has in his basket (reference of products for the recommendations)
 	bxRequest.setBasketProductWithPrices(_itemFieldId, _itemFieldIdValuesPrices)

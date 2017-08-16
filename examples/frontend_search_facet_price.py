@@ -18,10 +18,10 @@ try :
 	_queryText = "women" # // a search query to be completed
 	_hitCount = 10 #; //a maximum number of search result to return in one page
 	form = cgi.FieldStorage() 
-	if  form.getvalue('bx_price') != null :
+	if  form.getvalue('bx_price') != None :
 		_selectedValue = form.getvalue('bx_price')
 	else :
-		_selectedValue = null
+		_selectedValue = None
 
 	#//create search request
 	bxRequest = BxSearchRequest.BxSearchRequest(_language, _queryText, _hitCount)

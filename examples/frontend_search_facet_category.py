@@ -19,10 +19,10 @@ try :
 	_hitCount = 10 #; //a maximum number of search result to return in one page
 	_facetField = "products_color" # //the field to consider in the filter - IMPORTANT: you need to put "products_" as a prefix to your field name except for standard fields: "title", "body", "discountedPrice", "standardPrice"
 	form = cgi.FieldStorage() 
-	if  form.getvalue('bx_category_id') != null :
+	if  form.getvalue('bx_category_id') != None :
 		_selectedValue = form.getvalue('bx_category_id')
 	else :
-		_selectedValue = null
+		_selectedValue = None
 
 	#//create search request
 	bxRequest = BxSearchRequest.BxSearchRequest(_language, _queryText, _hitCount)

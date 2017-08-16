@@ -64,16 +64,7 @@ class BxFacets:
 		
 		return self.parameterPrefix + parameterName
 
-	def uasort(self, _a, _b):
-		_aValue = int(self.getFacetExtraInfo(_a['fieldName'], 'order', _a['returnedOrder']))
-		if(_aValue == 0) :
-			_aValue =  _a['returnedOrder']
-		
-		_bValue = int(self.getFacetExtraInfo(_b['fieldName'], 'order', _b['returnedOrder']))
-		if _bValue == 0 :
-			_bValue =  _b['returnedOrder']
-		
-		return -1 if _aValue < _bValue else 1
+
 
 	def getFieldNames(self) :
 		fieldNames = {}
@@ -81,7 +72,18 @@ class BxFacets:
 			_facetResponse = self.getFacetResponse(_fieldName)
 			if _facetResponse.values.len() >0 :
 				fieldNames[_fieldName] = {'fieldName':_fieldName, 'returnedOrder': fieldNames.len()}
-		self.uasort(fieldNames, uasort)
+
+		def uasort(self, _a, _b):
+			_aValue = int(self.getFacetExtraInfo(_a['fieldName'], 'order', _a['returnedOrder']))
+			if (_aValue == 0):
+				_aValue = _a['returnedOrder']
+
+			_bValue = int(self.getFacetExtraInfo(_b['fieldName'], 'order', _b['returnedOrder']))
+			if _bValue == 0:
+				_bValue = _b['returnedOrder']
+
+			return -1 if _aValue < _bValue else 1
+		sorted(fieldNames, cmp=uasort)
 		return fieldNames.keys()
 
 	
@@ -387,12 +389,7 @@ class BxFacets:
 				return categoryId 
 		return None
 	
-	def uasortGetFacetKeysValue(_a, _b) :
-		if _a.hitCount > _b.hitCount :
-			return -1
-		elif _b.hitCount > _a.hitCount :
-			return 1
-		return 0
+
 
 	def getFacetKeysValues(self, fieldName, ranking='alphabetical', minCategoryLevel=0) :
 		if fieldName == "" :
@@ -422,9 +419,15 @@ class BxFacets:
 		
 		if _overWriteRanking == "alphabetical" :
 			_ranking = 'alphabetical'
-		
+
+		def uasortGetFacetKeysValue(_a, _b):
+			if _a.hitCount > _b.hitCount:
+				return -1
+			elif _b.hitCount > _a.hitCount:
+				return 1
+			return 0
 		if _ranking == 'counter' :
-			self.uasort(_facetValues, uasortGetFacetKeysValue)
+			sorted(_facetValues, uasortGetFacetKeysValue)
 		
 		
 		_displaySelectedValues = self.getFacetExtraInfo(self, fieldName, "displaySelectedValues")

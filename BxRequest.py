@@ -28,8 +28,10 @@ class BxRequest:
 		self._max = max
 		if self._max == 0:
 			self._max = 1
-		 
-		self._withRelaxation = choiceId == 'search'
+		if choiceId == 'search':
+			self._withRelaxation = 1
+
+
 	 
 	 
 	def getWithRelaxation(self) : 
@@ -107,7 +109,7 @@ class BxRequest:
 	 
 	def addSortField(self, field, reverse =False) : 
 		if self.bxSortFields == None: 
-			self.bxSortFields = BxSortFields() 
+			self.bxSortFields = BxSortFields.BxSortFields()
 		 
 		self.bxSortFields.push(field, reverse) 
 	 
@@ -132,7 +134,7 @@ class BxRequest:
 		return self.min 
 	 
 	 
-	def setMin(min) : 
+	def setMin(self, min) :
 		self.min = min 
 	 
  
@@ -142,9 +144,9 @@ class BxRequest:
 	 
 	def setIndexId(self, indexId) : 
 		self._indexId = indexId
-		for _k, _contextItem in self.__contextItems :
-			if _contextItem._indexId == None :
-				self.__contextItems[_k]._indexId = _indexId
+		for _k, _contextItem in self._contextItems.iteritems() :
+			if _contextItem == None :
+				self._contextItems['_indexId'] = indexId
 			 
 		 
 	 
@@ -179,7 +181,7 @@ class BxRequest:
  
 	def getSimpleSearchQuery(self) : 
 		 
-		_searchQuery = SimpleSearchQuery() 
+		_searchQuery = BxSortFields.ttypes.SimpleSearchQuery()
 		_searchQuery._indexId = self.getIndexId()
 		_searchQuery.language = self.getLanguage() 
 		_searchQuery.returnFields = self.getReturnFields() 
@@ -202,53 +204,55 @@ class BxRequest:
 		return _searchQuery 
 	 
 	 
-	__contextItems = {} 
+	_contextItems = {}
 	def setProductContext(self, fieldName, contextItemId, role = 'mainProduct') : 
-		_contextItem = ContextItem() 
+		_contextItem = BxSortFields.ttypes.ContextItem()
 		_contextItem._indexId = self.getIndexId()
 		_contextItem.fieldName = fieldName 
 		_contextItem.__contextItemId = contextItemId
-		_contextItem.role = role 
-		self.__contextItems.append( _contextItem )
+		_contextItem.role = role
+		self._contextItems ={'_contextItemId': contextItemId ,'_fieldName': fieldName,'_indexId' :self.getIndexId() ,'_role':role}
+
 	 
-	def usort(_a, _b):
-		if _a['price'] > _b['price'] : 
-			return -1 
-		elif b['price'] > a['price'] :
-			return 1 
-		 
-		return 0 
+
 
 
 	def setBasketProductWithPrices(self, fieldName, basketContent, role = 'mainProduct', subRole = 'mainProduct') : 
 		if basketContent != False and len(basketContent) != None :
 			 
 			# Sort basket content by price 
+			def usort(_a, _b):
+				if _a['price'] > _b['price']:
+					return -1
+				elif _b['price'] > _a['price']:
+					return 1
 
+				return 0
 			sorted(basketContent, usort) 
  
 			_basketItem = basketContent.pop(0) 
  
-			_contextItem = ContextItem() 
+			_contextItem = BxSortFields.ttypes.ContextItem()
 			_contextItem._indexId = self.getIndexId()
 			_contextItem.fieldName = fieldName 
 			_contextItem.contextItemId = _basketItem['id'] 
 			_contextItem.role = role 
  
-			self.__contextItems.append( _contextItem )
+			self._contextItems.update({'_indexId' :self.getIndexId(),'fieldName':fieldName,'contextItemId' :_basketItem['id'] , 'role':role })
  
-			for _basketItem in _basketContent: 
-				_contextItem = ContextItem() 
+			for _basketItem in basketContent:
+				_contextItem = BxSortFields.ttypes.ContextItem()
 				_contextItem._indexId = self.getIndexId()
 				_contextItem.fieldName = fieldName 
 				_contextItem.contextItemId = _basketItem['id'] 
-				_contextItem.role = subRole 
-				self.__contextItems.append( _contextItem )
+				_contextItem.role = subRole
+				self._contextItems.update({'_indexId': self.getIndexId(), 'fieldName': fieldName, 'contextItemId': _basketItem['id'],'role': role})
+
 			 
 	 
 	 
 	def getContextItems(self) : 
-		return self.__contextItems
+		return self._contextItems
 	 
 	 
 	def getRequestContextParameters(self) : 

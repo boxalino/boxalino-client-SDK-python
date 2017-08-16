@@ -1,6 +1,6 @@
 
 import BxClient
-import BxRecommendationRequest
+import BxRequest
 
 #required parameters you should set for this example to work
 _account = "csharp_unittest" # your account name
@@ -21,7 +21,7 @@ try :
 	_hitCount = 10 #a maximum number of recommended result to return in one page
 
 	#create similar recommendations request
-	bxRequest = BxRecommendationRequest.BxRecommendationRequest(_language, _choiceId, _hitCount)
+	bxRequest = BxRequest.BxRequest(_language, _choiceId, _hitCount)
 	
 	#indicate the product the user is looking at now (reference of what the recommendations need to be similar to)
 	bxRequest.setProductContext(_itemFieldId, _itemFieldIdValue)

@@ -1,7 +1,14 @@
 import csv 
 import os
 import json
-import pycurl 
+import pycurl
+try:
+    # python 3
+    from urllib.parse import urlencode
+except ImportError:
+    # python 2
+    from urllib import urlencode
+
 import tempfile
 import types
 import StringIO
@@ -227,11 +234,11 @@ class BxData():
 
 		self._sources[_container][_sourceId]['fields'][fieldName] = {'type':type, 'localized':localized, 'map':colMap, 'referenceSourceKey':referenceSourceKey}
 		if self._sources[_container][_sourceId]['format'] == 'CSV' :
-			if localized and referenceSourceKey == None :
+			if localized == False and referenceSourceKey == None :
 				if isinstance(colMap,dict)==False :
 					raise Exception(fieldName+': invalid column field name for a localized field (expect an array with a column name for each language array(lang:colName)): ' + pickle.dumps(colMap))
 				
-				for _lang in self.getLanguages().iteritems() :
+				for _lang in self.getLanguages() :
 					try:
 						if colMap[_lang] != None :
 							pass
@@ -283,7 +290,7 @@ class BxData():
 		try:
 			if self._sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] != None:
 				pass
-		except IndexError:
+		except NameError:
 			self._sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'] = {}
 		
 		self._sources[_container][_sourceId]['fields'][fieldName]['fieldParameters'][parameterName] = parameterValue
@@ -399,14 +406,16 @@ class BxData():
 								ET.SubElement(source , _parameter).set('guest_property_id', _sourceValues['guest_property_id']);
 							except :
 								pass
-				if self._ftpSources[_sourceId]!=None :
-					
-					ET.SubElement(source , 'location').set('type', 'ftp');
-					
-					ftp = ET.SubElement(source , 'ftp').set('name', 'ftp');
-					
-					for _ftpPn , _ftpPv in self._ftpSources[_sourceId].iteritems():
-						ftp._ftpPn = _ftpPv
+				try:
+					if _sourceId in self._ftpSources :
+						ET.SubElement(source, 'location').set('type', 'ftp');
+
+						ftp = ET.SubElement(source, 'ftp').set('name', 'ftp');
+
+						for _ftpPn, _ftpPv in self._ftpSources[_sourceId].iteritems():
+							ftp._ftpPn = _ftpPv
+				except NameError:
+					pass
 					
 				
 				if _sourceValues['fields']!=None :
@@ -451,8 +460,9 @@ class BxData():
 							ET.SubElement(_params, 'referenceSource').set('value', _referenceSourceId)
 						
 						try:
-							for _parameterName , _parameterValue in _fieldValues['fieldParameters'] :
-								fieldParameter = ET.SubElement(_params, 'fieldParameter', name=_parameterName,value=_parameterValue)
+							if 'fieldParameters' in _fieldValues:
+								for _parameterName , _parameterValue in _fieldValues['fieldParameters'] :
+									fieldParameter = ET.SubElement(_params, 'fieldParameter', name=_parameterName,value=_parameterValue)
 							
 						except IndexError:
 							pass
@@ -469,12 +479,12 @@ class BxData():
 		s.setopt(s.TIMEOUT, 60)
 		s.setopt(s.POST, 1)
 		s.setopt(s.ENCODING, '')
-		s.setopt(s.RETURNTRANSFER, 1)
-		s.setopt(s.POSTFIELDS, fields)
+		#s.setopt(s.RETURNTRANSFER, True)
+		s.setopt(s.POSTFIELDS,urlencode( fields))
 		b = StringIO.StringIO()
-		c.setopt(pycurl.WRITEFUNCTION, b.write)
-
-		c.perform()
+		s.setopt(pycurl.WRITEFUNCTION, b.write)
+		s.setopt(s.VERBOSE, True)
+		s.perform()
 		responseBody = b.getvalue()
 		if responseBody == False:
 			if "couldn't open file" in s.errstr() :
@@ -498,7 +508,7 @@ class BxData():
 		return responseBody
 	
 	
-	def checkResponseBody(responseBody, url) :
+	def checkResponseBody(self, responseBody, url) :
 		if responseBody == None :
 			raise Exception("API response of call to $url is empty string, this is an error!")
 		
