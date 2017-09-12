@@ -1,14 +1,14 @@
 import hashlib
 import BxChooseResponse
 class BxAutocompleteResponse:
-	_response = None
-	_bxAutocompleteRequest = None
+	response = None
+	bxAutocompleteRequest = None
 	def __init__(self,response, bxAutocompleteRequest=None):
-		self._response = response
-		self._bxAutocompleteRequest = bxAutocompleteRequest
+		self.response = response
+		self.bxAutocompleteRequest = bxAutocompleteRequest
 
 	def getResponse(self):
-		return self._response
+		return self.response
 
 	def getPrefixSearchHash(self):
 		if self.getResponse().prefixSearchResult.totalHitCount > 0:
@@ -23,105 +23,105 @@ class BxAutocompleteResponse:
 	def suggestionIsInGroup(self, groupName, suggestion):
 		hit = self.getTextualSuggestionHit(suggestion)
 		if groupName=='highlighted-beginning':
-			return hit._highlighted != "" and self._bxAutocompleteRequest.getHighlightPre() in hit._highlighted is 0
+			return hit.highlighted != "" and self.bxAutocompleteRequest.getHighlightPre() in hit.highlighted is 0
 		elif groupName=='highlighted-not-beginning':
-			return hit._highlighted != "" and self._bxAutocompleteRequest.getHighlightPre() in hit._highlighted is not 0
+			return hit.highlighted != "" and self.bxAutocompleteRequest.getHighlightPre() in hit.highlighted is not 0
 		else :
-			return hit._highlighted == ""
+			return hit.highlighted == ""
 	
 	def reOrderSuggestions(self,  suggestions):
-		_queryText = self._getSearchRequest.getQueryText();
+		queryText = self.getSearchRequest().getQueryText();
 		
-		_groupNames = ['highlighted-beginning', 'highlighted-not-beginning', 'others'];
-		_groupValues = []
+		groupNames = ['highlighted-beginning', 'highlighted-not-beginning', 'others'];
+		groupValues = []
 		
-		for _k, _groupName in _groupNames:
+		for k, groupName in groupNames:
 			try:
-				_groupValues[_k]
+				groupValues[k]
 			except IndexError:
-				_groupValues[_k] = []
+				groupValues[k] = []
 
-			for _suggestion in suggestions():
-				if self.suggestionIsInGroup(self, _groupName, _suggestion):
-					_groupValues[_k].append( _suggestion)
+			for suggestion in suggestions():
+				if self.suggestionIsInGroup(self, groupName, suggestion):
+					groupValues[k].append( suggestion)
 		
-		_final = []
-		for _values in _groupValues():
-			for _value in _values():
-				_final.append( _value)
+		final = []
+		for values in groupValues():
+			for value in values():
+				final.append( value)
 			
-		return _final
+		return final
 	
 
 	def getTextualSuggestionHit(self,  suggestion):
-		for _hit in self._getResponse().hits():
-			if _hit._suggestion == suggestion:
-				return _hit;
+		for hit in self.getResponse().hits():
+			if hit.suggestion == suggestion:
+				return hit;
 		raise Exception('unexisting textual suggestion provided'+ suggestion)
 	
 	
 	def getTextualSuggestionTotalHitCount(self,  suggestion):
-		_hit = self.getTextualSuggestionHit(suggestion)
-		return _hit._searchResult.totalHitCount
+		hit = self.getTextualSuggestionHit(suggestion)
+		return hit.searchResult.totalHitCount
 	
 	def getSearchRequest(self):
-		return self._bxAutocompleteRequest.getBxSearchRequest()
+		return self.bxAutocompleteRequest.getBxSearchRequest()
 	
 	
 	def getTextualSuggestionFacets(self, suggestion):
-		_hit = self._getTextualSuggestionHit(suggestion)
+		hit = self.getTextualSuggestionHit(suggestion)
 	
-		_facets = self._getSearchRequest().getFacets()
+		facets = self.getSearchRequest().getFacets()
 
-		if _facets is None:
+		if facets is None:
 			return None
 		
-		_facets._setSearchResults(_hit._searchResult)
-		return _facets
+		facets._setSearchResults(hit.searchResult)
+		return facets
 	
 	def getTextualSuggestionHighlighted(self, suggestion):
-		_hit = self._getTextualSuggestionHit(suggestion)
-		if _hit._highlighted == "":
+		hit = self.getTextualSuggestionHit(suggestion)
+		if hit.highlighted == "":
 			return suggestion
-		return _hit._highlighted
+		return hit.highlighted
 	
 	def getBxSearchResponse(self, textualSuggestion= None):
 
 		if textualSuggestion == None :
-			_searchResult =  self._getResponse().prefixSearchResult
+			searchResult =  self.getResponse().prefixSearchResult
 		else :
-			_searchResult = self._getTextualSuggestionHit(_textualSuggestion)._searchResult
-		return BxChooseResponse(_searchResult, self.bxAutocompleteRequest.getBxSearchRequest())
+			searchResult = self.getTextualSuggestionHit(textualSuggestion).searchResult
+		return BxChooseResponse.BxChooseResponse(searchResult, self.bxAutocompleteRequest.getBxSearchRequest())
 	
 	def getPropertyHits(self, field):
-		for _propertyResult in self.getResponse()._propertyResults(): 
-			if _propertyResult._name == field:
-				return _propertyResult._hits
+		for propertyResult in self.getResponse().propertyResults():
+			if propertyResult.name == field:
+				return propertyResult.hits
 		return [];
 	
 	def getPropertyHit(self, field, hitValue):
-		for _hit in self.getPropertyHits(field): 
+		for hit in self.getPropertyHits(field):
 			if self.value == hitValue:
-				return _hit
+				return hit
 		return None;
 
 
 	
 	def getPropertyHitValues(self, field):
-		_hitValues =[]
-		for _hit in self._getPropertyHits(field):
-			_hitValues.append(_hit.value)
-		return _hitValues
+		hitValues =[]
+		for hit in self.getPropertyHits(field):
+			hitValues.append(hit.value)
+		return hitValues
 	
 	
 	def getPropertyHitValueLabel(self, field, hitValue):
-		_hit = self.getPropertyHit(field, hitValue);
-		if _hit != None:
-			return _hit._label
-		return None;
+		hit = self.getPropertyHit(field, hitValue)
+		if hit != None:
+			return hit.label
+		return None
 	
 	def getPropertyHitValueTotalHitCount(self, field, hitValue):
-		_hit = self.getPropertyHit(field, hitValue);
-		if _hit != None:
-			return _hit._totalHitCount
+		hit = self.getPropertyHit(field, hitValue);
+		if hit != None:
+			return hit.totalHitCount
 		return None

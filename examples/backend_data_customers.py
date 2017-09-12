@@ -29,7 +29,7 @@ try :
 	
 
 	_logs.append("push the data for data sync")
-	if _print:
+	if _print== True:
 		print "<br>".join(_logs)
 	
 	bxData.pushData()

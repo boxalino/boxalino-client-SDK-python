@@ -73,8 +73,8 @@ try:
 	
 	_logs.append("<h3>sort fields</h3>")
 	bxSortFields = bxRequest.getSortFields()
-	for _fieldName in bxSortFields.getSortFields():
-		_logs.append(_fieldName+": " + bxSortFields.isFieldReverse(_fieldName))
+	#for _fieldName in bxSortFields.getSortFields():
+	#	_logs.append(_fieldName+": " + bxSortFields.isFieldReverse(_fieldName))
 	
 	_logs.append("..")
 	

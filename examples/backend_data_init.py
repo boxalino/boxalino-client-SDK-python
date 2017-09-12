@@ -9,7 +9,7 @@ _isDev = False
 _isDelta = False
 _logs = []
 _print = True
-
+BxClient.BxClient.LOAD_CLASSES
 bxData = BxData.BxData(BxClient.BxClient(_account, _password, _domain), _languages, _isDev,_isDelta)
 try:
 	#/**

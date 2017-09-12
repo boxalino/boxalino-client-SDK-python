@@ -1,7 +1,7 @@
 from p13n import ttypes
 class BxSortFields:
 
-	_sorts = {}
+	sorts = {}
 
 	def __init__(self, field=None, reverse=False ) :
 
@@ -12,25 +12,25 @@ class BxSortFields:
 
 	def push(self, field, reverse=False):
 
-		self._sorts[field] = reverse
+		self.sorts[field] = reverse
 
 	def getSortFields(self):
 
-		return self._sorts.keys()
+		return self.sorts.keys()
 
 	
 	def isFieldReverse(self, field):
 		try:
-			if self._sorts[field] != None :
+			if self.sorts[field] != None :
 				return True;
 		except IndexError:
 			return False
 	
 	
 	def getThriftSortFields(self) :
-		_sortFields = {}
-		for _field  in self.getSortFields():
-			_sortFields.append(ttypes.SortField({'fieldName' : _field,'reverse' : self.isFieldReverse(_field)}))
+		sortFields = {}
+		for field  in self.getSortFields():
+			sortFields.update(ttypes.SortField({'fieldName' : field,'reverse' : self.isFieldReverse(field)}))
 		
-		return _sortFields
+		return sortFields
 	

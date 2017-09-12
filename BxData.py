@@ -15,6 +15,7 @@ import StringIO
 import urllib2
 import xml.etree.cElementTree as ET
 import pickle
+import zipfile
 class BxData():
 
 	URL_VERIFY_CREDENTIALS = '/frontend/dbmind/en/dbmind/api/credentials/verify'
@@ -234,8 +235,8 @@ class BxData():
 
 		self._sources[_container][_sourceId]['fields'][fieldName] = {'type':type, 'localized':localized, 'map':colMap, 'referenceSourceKey':referenceSourceKey}
 		if self._sources[_container][_sourceId]['format'] == 'CSV' :
-			if localized == False and referenceSourceKey == None :
-				if isinstance(colMap,dict)==False :
+			if localized == True and referenceSourceKey == None :
+				if not isinstance(colMap,dict):
 					raise Exception(fieldName+': invalid column field name for a localized field (expect an array with a column name for each language array(lang:colName)): ' + pickle.dumps(colMap))
 				
 				for _lang in self.getLanguages() :
@@ -329,7 +330,6 @@ class BxData():
 	
 	
 	def getXML(self) :
-		
 		root = ET.Element("root")
 		
 		languages = ET.SubElement(root, "languages")
@@ -383,14 +383,15 @@ class BxData():
 					except IndexError:
 						_value = _defaultValue
 						
-					if _value == False :
+					if not _value :
 						raise Exception("source parameter "+_parameter+" required but not defined in source id "+_sourceId+" for container "+_containerName)
 					
 					param = ET.SubElement(source , _parameter)
-					if isinstance(_value, list) ==True:
-						for _language , _languageColumn in _value():
-							ET.SubElement(param, "language", name=_language, value=_languageColumn)
-						
+					if isinstance(_value, dict) :
+
+						for _language , _languageColumn in _value.iteritems():
+							ET.SubElement(param, "language",name=_language,value= _languageColumn)
+
 					else :
 						ET.SubElement(source , _parameter).set('value', _value)
 					
@@ -417,55 +418,57 @@ class BxData():
 				except NameError:
 					pass
 					
-				
-				if _sourceValues['fields']!=None :
-					for _fieldId , _fieldValues in _sourceValues['fields'].iteritems() :
+				try:
+					if _sourceValues['fields']!=None :
+						for _fieldId , _fieldValues in _sourceValues['fields'].iteritems() :
 						
-						_property = ET.SubElement(properties, "property", id=_fieldId, type=_fieldValues['type'])
+							_property = ET.SubElement(properties, "property", id=_fieldId, type=_fieldValues['type'])
 						
-						transform = ET.SubElement(_property, "transform")
-						logic = ET.SubElement(transform, "logic", source=_sourceId)
+							transform = ET.SubElement(_property, "transform")
+							logic = ET.SubElement(transform, "logic", source=_sourceId)
 
-						try:
-							
-							_referenceSourceKey = _fieldValues['referenceSourceKey']
-							_logicType = 'reference'
-						except IndexError:
-							_referenceSourceKey = None
-							_logicType =  'direct'  
-
-
-						if _logicType == 'direct' :
 							try:
-								for _parameterName , _parameterValue in _fieldValues['fieldParameters'] :
-									if _parameterName == 'pc_tables':
-										_logicType = 'advanced'
+
+								_referenceSourceKey = _fieldValues['referenceSourceKey']
+								_logicType = 'reference'
+							except IndexError:
+								_referenceSourceKey = None
+								_logicType =  'direct'
+
+
+							if _logicType == 'direct' :
+								try:
+									for _parameterName , _parameterValue in _fieldValues['fieldParameters'].iteritems() :
+										if _parameterName == 'pc_tables':
+											_logicType = 'advanced'
+								except IndexError:
+									pass
+							ET.SubElement(transform, "logic").set('type',_logicType)
+
+							if isinstance(_fieldValues['map'], dict) :
+								for _lang in self.getLanguages() :
+									_field = ET.SubElement(logic, 'field', column=_fieldValues['map'][_lang], language=_lang)
+
+							else :
+								_field = ET.SubElement(logic, 'field', column=_fieldValues['map'])
+
+						
+							_params =  ET.SubElement(_property, 'params')
+
+							if _referenceSourceKey!= None :
+								referenceSource = ET.SubElement(_params, 'referenceSource')
+								(_referenceContainer, _referenceSourceId) = self.decodeSourceKey(_referenceSourceKey)
+								ET.SubElement(_params, 'referenceSource').set('value', _referenceSourceId)
+
+							try:
+								if 'fieldParameters' in _fieldValues:
+									for _parameterName , _parameterValue in _fieldValues['fieldParameters'].iteritems() :
+										fieldParameter = ET.SubElement(_params, 'fieldParameter', name=_parameterName,value=_parameterValue)
+
 							except IndexError:
 								pass
-						ET.SubElement(transform, "logic").set('type',_logicType)
-						
-						if isinstance(_fieldValues['map'], list) :
-							for _lang in self.getLanguages() :
-								_field = ET.SubElement(logic, 'field', column=_fieldValues['map'][_lang], language=_lang)
-								
-						else :
-							_field = ET.SubElement(logic, 'field', column=_fieldValues['map'])
-							
-						
-						_params =  ET.SubElement(_property, 'params')
-						
-						if _referenceSourceKey!= None :
-							referenceSource = ET.SubElement(_params, 'referenceSource')
-							(_referenceContainer, _referenceSourceId) = self.decodeSourceKey(_referenceSourceKey)
-							ET.SubElement(_params, 'referenceSource').set('value', _referenceSourceId)
-						
-						try:
-							if 'fieldParameters' in _fieldValues:
-								for _parameterName , _parameterValue in _fieldValues['fieldParameters'] :
-									fieldParameter = ET.SubElement(_params, 'fieldParameter', name=_parameterName,value=_parameterValue)
-							
-						except IndexError:
-							pass
+				except:
+					pass
 		_tree = ET.ElementTree(root)
 		return _tree.write("filename.xml")
 		
@@ -572,12 +575,17 @@ class BxData():
 	
 	def getFiles(self) :
 		files = {}
-		for _container , _containerSources in self._sources:
-			for _sourceId , _sourceValues in _containerSources  :
-				if self._ftpSources[_sourceId]!= None :
-					continue
-				
-				if _sourceValues['file']== None :
+		for _container , _containerSources in self._sources.iteritems():
+			for _sourceId , _sourceValues in _containerSources.iteritems()  :
+				try:
+					if self._ftpSources[_sourceId] != None :
+						continue
+				except:
+					pass
+				try:
+					if not _sourceValues['file']:
+						pass
+				except:
 					_sourceValues['file'] = self.getFileNameFromPath(_sourceValues['filePath'])
 				files[_sourceValues['file']] = _sourceValues['filePath']
 		return files
@@ -599,19 +607,19 @@ class BxData():
 
 		
 		files = self.getFiles()
-		zzip = zipfile.ZipFile(zipFilePath, 'w') 
-		if zzip == True :
+		zzip = zipfile.ZipFile(zipFilePath, 'a')
+		if zzip != None :
 
-			for _f , _filePath in files :
-				if zzip.write(_filePath) != True:
+			for _f , _filePath in files.iteritems() :
+				if zzip.write(_filePath)  :
 					raise Exception('Synchronization failure: Failed to add file "' +_filePath+ '" to the zip "' +name+ '". Please try again.')
+			zzip.writestr('properties.xml', self.getXML())
+			#if zzip.writestr('properties.xml', self.getXML()) != True :
+			#	raise Exception('Synchronization failure: Failed to add xml string to the zip "' +name + '". Please try again.')
 
-			if zzip.writestr('properties.xml', self.getXML()) != True :
-				raise Exception('Synchronization failure: Failed to add xml string to the zip "' +name + '". Please try again.')
-
-
-			if zzip.close() != True :
-				raise Exception('Synchronization failure: Failed to close the zip "' +name + '". Please try again.')
+			zzip.close()
+			#if zzip.close() != True :
+			#	raise Exception('Synchronization failure: Failed to close the zip "' +name + '". Please try again.')
 
 		else :
 			raise Exception('Synchronization failure: Failed to open the zip "' +name + '" for writing. Please check the permissions and try again.')

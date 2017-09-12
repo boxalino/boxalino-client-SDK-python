@@ -1,98 +1,99 @@
 import BxSortFields
 class BxRequest:
  
-	_language = None 
-	_groupBy = None 
-	_choiceId = None 
-	_min = None 
-	_max = None 
-	_withRelaxation = None 
+	language = None 
+	groupBy = None 
+	choiceId = None 
+	min = None
+	max = None
+	withRelaxation = None 
 	 
-	_indexId = None 
-	_requestMap = None 
-	_returnFields = None
-	_offset = 0 
-	_queryText = "" 
-	_bxFacets = None 
-	_bxSortFields = None 
-	_bxFilters = None
-	_orFilters = False 
+	indexId = None 
+	requestMap = None 
+	returnFields = None
+	offset = 0 
+	queryText = "" 
+	bxFacets = None 
+	bxSortFields = None 
+	bxFilters = None
+	orFilters = False 
 	 
 	def __init__(self, language, choiceId, max=10, min=0) :
 		if choiceId == '': 
 			raise Exception('BxRequest created with None choiceId') 
 		 
-		self._language = language
-		self._choiceId = choiceId
+		self.language = language
+		self.choiceId = choiceId
 		self._min = min
-		self._max = max
-		if self._max == 0:
-			self._max = 1
+		self.max = max
+		if self.max == 0:
+			self.max = 1
 		if choiceId == 'search':
-			self._withRelaxation = 1
+			self.withRelaxation = 1
 
 
 	 
 	 
 	def getWithRelaxation(self) : 
-		return self._withRelaxation
+		return self.withRelaxation
 	 
 	 
 	def setWithRelaxation(self, withRelaxation) : 
-		self._withRelaxation = withRelaxation
+		self.withRelaxation = withRelaxation
 	 
 	 
 	def getReturnFields(self) : 
-		return self._returnFields
+		return self.returnFields
 	 
 	 
 	def setReturnFields(self, returnFields) : 
-		self._returnFields = returnFields
+		self.returnFields = returnFields
 	 
 	 
 	def getOffset(self) : 
-		return self._offset
+		return self.offset
 	 
 	 
 	def setOffset(self, offset) : 
-		self._offset = offset
+		self.offset = offset
 	 
 	 
 	def getQuerytext(self) : 
-		return self._queryText
+		return self.queryText
 	 
 	 
 	def setQuerytext(self, queryText) : 
-		self._queryText = queryText
+		self.queryText = queryText
 	 
 	 
 	def getFacets(self) :
-		return self._bxFacets
+		return self.bxFacets
 	 
 	 
 	def setFacets(self, bxFacets) : 
-		self._bxFacets = bxFacets
+		self.bxFacets = bxFacets
 	 
 	 
 	def getSortFields(self) : 
-		return self._bxSortFields
+		return self.bxSortFields
 	 
 	 
 	def setSortFields(self, bxSortFields) : 
-		self._bxSortFields = bxSortFields
+		self.bxSortFields = bxSortFields
 	 
 	 
 	def getFilters(self) : 
-		_filters = self._bxFilters
+		#filters ={ }
+		filters = self.bxFilters
 		if BxRequest.getFacets(self) != None:
 			for _filter in self.getFacets().getFilters() :
-				_filters.append( _filter )
+				filters.append( _filter )
 		 
-		return self._bxFilters
+		return self.bxFilters
 	 
 	 
 	def setFilters(self, bxFilters) : 
-		self._bxFilters = bxFilters
+		self.bxFilters = bxFilters
 	 
 	 
 	def addFilter(self , bxFilter) : 
@@ -139,27 +140,27 @@ class BxRequest:
 	 
  
 	def getIndexId(self) :
-		return self._indexId
+		return self.indexId
 	 
 	 
 	def setIndexId(self, indexId) : 
-		self._indexId = indexId
-		for _k, _contextItem in self._contextItems.iteritems() :
-			if _contextItem == None :
-				self._contextItems['_indexId'] = indexId
+		self.indexId = indexId
+		for k, contextItem in self.contextItems.iteritems() :
+			if contextItem == None :
+				self.contextItems['indexId'] = indexId
 			 
 		 
 	 
 	 
 	def setDefaultIndexId(self, indexId) : 
-		if self._indexId == None :
+		if self.indexId == None :
 			self.setIndexId(indexId) 
 		 
 	 
 	 
 	def setDefaultRequestMap(self, requestMap) : 
-		if self._requestMap == None :
-			self._requestMap = requestMap
+		if self.requestMap == None :
+			self.requestMap = requestMap
 		 
 	 
  
@@ -181,37 +182,37 @@ class BxRequest:
  
 	def getSimpleSearchQuery(self) : 
 		 
-		_searchQuery = BxSortFields.ttypes.SimpleSearchQuery()
-		_searchQuery._indexId = self.getIndexId()
-		_searchQuery.language = self.getLanguage() 
-		_searchQuery.returnFields = self.getReturnFields() 
-		_searchQuery.offset = self.getOffset() 
-		_searchQuery.hitCount = self.getMax() 
-		_searchQuery.queryText = self.getQueryText() 
-		_searchQuery.groupBy = self.groupBy 
-		if len(self.getFilters()) > 0 :
-			_searchQuery.filters = {} 
+		searchQuery = BxSortFields.ttypes.SimpleSearchQuery()
+		searchQuery.indexId = self.getIndexId()
+		searchQuery.language = self.getLanguage() 
+		searchQuery.returnFields = self.getReturnFields() 
+		searchQuery.offset = self.getOffset() 
+		searchQuery.hitCount = self.getMax() 
+		searchQuery.queryText = self.getQuerytext()
+		searchQuery.groupBy = self.groupBy 
+		if self.getFilters() !=None :
+			searchQuery.filters = {} 
 			for _filter in self.getFilters() : 
-				_searchQuery.filters.append( _filter.getThriftFilter() )
+				searchQuery.filters.append( _filter.getThriftFilter() )
 			 
 		 
-		_searchQuery.orFilters = self.getOrFilters() 
+		searchQuery.orFilters = self.getOrFilters() 
 		if self.getFacets() != None : 
-			_searchQuery.facetRequests = self.getFacets().getThriftFacets() 
+			searchQuery.facetRequests = self.getFacets().getThriftFacets() 
 		 
 		if self.getSortFields() != None : 
-			_searchQuery.sortFields = self.getSortFields().getThriftSortFields() 
-		return _searchQuery 
+			searchQuery.sortFields = self.getSortFields().getThriftSortFields() 
+		return searchQuery 
 	 
 	 
-	_contextItems = {}
+	contextItems = {}
 	def setProductContext(self, fieldName, contextItemId, role = 'mainProduct') : 
-		_contextItem = BxSortFields.ttypes.ContextItem()
-		_contextItem._indexId = self.getIndexId()
-		_contextItem.fieldName = fieldName 
-		_contextItem.__contextItemId = contextItemId
-		_contextItem.role = role
-		self._contextItems ={'_contextItemId': contextItemId ,'_fieldName': fieldName,'_indexId' :self.getIndexId() ,'_role':role}
+		contextItem = BxSortFields.ttypes.ContextItem()
+		contextItem.indexId = self.getIndexId()
+		contextItem.fieldName = fieldName 
+		contextItem.contextItemId = contextItemId
+		contextItem.role = role
+		self.contextItems ={'contextItemId': contextItemId ,'fieldName': fieldName,'indexId' :self.getIndexId() ,'role':role}
 
 	 
 
@@ -232,27 +233,27 @@ class BxRequest:
  
 			_basketItem = basketContent.pop(0) 
  
-			_contextItem = BxSortFields.ttypes.ContextItem()
-			_contextItem._indexId = self.getIndexId()
-			_contextItem.fieldName = fieldName 
-			_contextItem.contextItemId = _basketItem['id'] 
-			_contextItem.role = role 
+			contextItem = BxSortFields.ttypes.ContextItem()
+			contextItem._indexId = self.getIndexId()
+			contextItem.fieldName = fieldName 
+			contextItem.contextItemId = _basketItem['id'] 
+			contextItem.role = role 
  
-			self._contextItems.update({'_indexId' :self.getIndexId(),'fieldName':fieldName,'contextItemId' :_basketItem['id'] , 'role':role })
+			self.contextItems.update({'indexId' :self.getIndexId(),'fieldName':fieldName,'contextItemId' :_basketItem['id'] , 'role':role })
  
 			for _basketItem in basketContent:
-				_contextItem = BxSortFields.ttypes.ContextItem()
-				_contextItem._indexId = self.getIndexId()
-				_contextItem.fieldName = fieldName 
-				_contextItem.contextItemId = _basketItem['id'] 
-				_contextItem.role = subRole
-				self._contextItems.update({'_indexId': self.getIndexId(), 'fieldName': fieldName, 'contextItemId': _basketItem['id'],'role': role})
+				contextItem = BxSortFields.ttypes.ContextItem()
+				contextItem.indexId = self.getIndexId()
+				contextItem.fieldName = fieldName 
+				contextItem.contextItemId = _basketItem['id'] 
+				contextItem.role = subRole
+				self.contextItems.update({'indexId': self.getIndexId(), 'fieldName': fieldName, 'contextItemId': _basketItem['id'],'role': role})
 
 			 
 	 
 	 
 	def getContextItems(self) : 
-		return self._contextItems
+		return self.contextItems
 	 
 	 
 	def getRequestContextParameters(self) : 

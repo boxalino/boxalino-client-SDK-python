@@ -1,43 +1,48 @@
 import Cookie 
 import socket
+import requests
 import sys
 import os
 import BxChooseResponse
 import cgi
+import socket
+from p13n import ttypes
+from p13n import P13nService
+from thrift.transport import THttpClient
+from thrift.protocol import TCompactProtocol
+import base64
 class BxClient:
-	__account = None
-	__password = None
-	__isDev= None
-	__host= None
-	__port= None
-	__uri= None
-	__schema= None
-	__p13n_username= None
-	__p13n_password= None
-	__domain= None
-	
-	__isTest = None
+	account = None
+	password = None
+	isDev= None
+	host= None
+	port= None
+	uri= None
+	schema= None
+	p13n_username= None
+	p13n_password= None
+	domain= None
+	isTest = None
 
-	__autocompleteRequests = None
-	__autocompleteResponses = None
-	
-	__chooseRequests = []
-	__chooseResponses = None
+	autocompleteRequests = None
+	autocompleteResponses = None
+	chooseRequests = []
+	chooseResponses = None
 	
 	VISITOR_COOKIE_TIME = 31536000
 
-	__timeout = 2
-	__requestContextParameters = []
+	timeout = 2
+	requestContextParameters = []
 	
-	__sessionId = None
-	__profileId = None
+	sessionId = None
+	profileId = None
 	
-	__requestMap = []
+	requestMap = []
 	
-	__socketHost = None
-	__socketPort = None
-	__socketSendTimeout = None
-	__socketRecvTimeout = None
+	socketHost = None
+	socketPort = None
+	socketSendTimeout = None
+	socketRecvTimeout = None
 
 	def __init__(self,account,password, domain, isDev=False, host=None, port=None, uri=None, schema=None, p13n_username=None, p13n_password=None):
 		self.account = account
@@ -86,23 +91,23 @@ class BxClient:
 		self.requestMap = requestMap
 	
 	
-	def LOAD_CLASSES(libPath):
+	#def LOAD_CLASSES(str=50):
 		
-		_cl = ThriftClassLoader(False)
-		_cl.registerNamespace('Thrift', libPath)
-		_cl.register(True)
-		myrequire.require_once(libPath +'/P13nService.py')
-		myrequire.require_once(libPath +'/Types.py')
-		myrequire.require_once(libPath +'/BxFacets.py')
-		myrequire.require_once(libPath +'/BxRequest.py')
-		myrequire.require_once(libPath +'/BxRecommendationRequest.py')
-		myrequire.require_once(libPath +'/BxParametrizedRequest.py')
-		myrequire.require_once(libPath +'/BxSearchRequest.py')
-		myrequire.require_once(libPath +'/BxAutocompleteRequest.py')
-		myrequire.require_once(libPath +'/BxSortFields.py')
-		myrequire.require_once(libPath +'/BxChooseResponse.py')
-		myrequire.require_once(libPath +'/BxAutocompleteResponse.py')
-		myrequire.require_once(libPath +'/BxData.py')
+		#_cl = ThriftClassLoader(False)
+		#_cl.registerNamespace('Thrift', libPath)
+		#_cl.register(True)
+		from p13n import P13nService
+		from p13n import  ttypes
+		import BxFacets
+		import BxRequest
+		import BxRecommendationRequest
+		import BxParametrizedRequest
+		import BxSearchRequest
+		import BxAutocompleteRequest
+		import BxSortFields
+		import BxChooseResponse
+		import BxAutocompleteResponse
+		import BxData
 	
 	def getAccount(self, checkDev = True):
 		if checkDev == True and self.isDev == True:
@@ -125,76 +130,69 @@ class BxClient:
 	
 	
 	def getSessionAndProfile(self):
-
-		return self.httpContext.getSessionAndProfile(null, null, this.domain)
+		return ['et8h4docdgblt1m1q10ljl6eu0','et8h4docdgblt1m1q10ljl6eu0']
 
 
 	
 	def getUserRecord(self) :
-		_userRecord = UserRecord()
-		_userRecord.username = self.getAccount();
-		return _userRecord;
+		userRecord = ttypes.UserRecord()
+		userRecord.username = self.getAccount();
+		return userRecord;
 	
 	
 	def getP13n(self, timeout=2, useCurlIfAvailable=True):
 		
 		if self.socketHost != None :
-			_transport = TSocket(self.socketHost, self.socketPort)
-			_transport.setSendTimeout(self.socketSendTimeout)
-			_transport.setRecvTimeout(self.socketRecvTimeout)
-			_client = P13nServiceClient(TBinaryProtocol(_transport))
-			_transport.open()
-			return _client
+			transport = TSocket(self.socketHost, self.socketPort)
+			transport.setSendTimeout(self.socketSendTimeout)
+			transport.setRecvTimeout(self.socketRecvTimeout)
+			client = self.P13nServiceClient(TBinaryProtocol(transport))
+			transport.open()
+			return client
 		
-		try:
-			func = locals()[ curl_version ]
-			if useCurlIfAvailable != None and callable(func):
-				_transport = P13nTCurlClient(self.host, self.port, self.uri, self.schema)
-		except:
-				_transport = P13nTHttpClient(self.host, self.port, self.uri, self.schema)
-			
-		_transport.setAuthorization(self.p13n_username, self.p13n_password)
-		_transport.setTimeoutSecs(timeout)
-		_client = P13nServiceClient(TCompactProtocol(_transport))
+		_transport = THttpClient.THttpClient(self.host, self.port, self.uri)
+		#base64.b64encode(bytes('your string', 'utf-8'))
+		_transport.setCustomHeaders({'Authorization':"Basic "+base64.b64encode(bytes((self.p13n_username+':'+self.p13n_password).encode('utf-8')))})
+		_client = P13nService.Client(TCompactProtocol.TCompactProtocol(_transport))
 		_transport.open()
 		return _client
 	
 	
-	def getChoiceRequest(inquiries, requestContext = None):
+	def getChoiceRequest(self, inquiries, requestContext = None):
 		
-		_choiceRequest = ChoiceRequest()
+		choiceRequest = ttypes.ChoiceRequest()
 
-		(_sessionid, _profileid) = self.getSessionAndProfile()
+		(sessionid, profileid) = self.getSessionAndProfile()
 		
-		_choiceRequest.userRecord = selfgetUserRecord();
-		_choiceRequest.profileId = _profileid;
-		_choiceRequest.inquiries = inquiries;
+		choiceRequest.userRecord = self.getUserRecord();
+		choiceRequest.profileId = profileid;
+		choiceRequest.inquiries = inquiries;
 		if requestContext == None:
 			requestContext = self.getRequestContext()
 		
-		_choiceRequest.requestContext = requestContext
+		choiceRequest.requestContext = requestContext
 
-		return _choiceRequest
+		return choiceRequest
 	
 	
-	def getIP():
+	def getIP(self):
 
-		_ip = None
-		_clientip = os.environ["REMOTE_ADDR"]
-		_forwardedip = os.environ['HTTP_X_FORWARDED_FOR']
+		ip = None
+		clientip = os.environ["REMOTE_ADDR"]
+		forwardedip = os.environ['HTTP_X_FORWARDED_FOR']
 		try:
-			if socket.inet_aton(_clientip) != None:
-				_ip = _clientip
-			elif socket.inet_aton(_forwardedip) != None:
-				_ip = _forwardedip
+			if socket.inet_aton(clientip) != None:
+				ip = clientip
+			elif socket.inet_aton(forwardedip) != None:
+				ip = forwardedip
 		except socket.error:
-			_ip = os.environ["REMOTE_ADDR"]
-		return _ip
+			ip = os.environ["REMOTE_ADDR"]
+		return ip
 	
 
-	def getCurrentURL():
+	def getCurrentURL(self):
 		
-		return os.environ['REQUEST_URI'];
+		return "http://localhost:8000/"
 	
 	
 	def addRequestContextParameter (self, name, values) :
@@ -209,31 +207,32 @@ class BxClient:
 
 	def getBasicRequestContextParameters(self):
 		(_sessionid, _profileid) = self.getSessionAndProfile()
-		return {'User-Agent':[request.headers.get('User-Agent')],'User-Host':[self.getIP()],'User-SessionId' : array(_sessionid),'User-Referer'   : [request.META.get('HTTP_REFERER')],'User-URL': [self.getCurrentURL()]}
+		return {'User-Agent':["Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17"],'User-Host':[socket.gethostbyname(socket.gethostname())],'User-SessionId' : {_sessionid},'User-Referer'   : [""],'User-URL': [self.getCurrentURL()]}
 	
 
 	def getRequestContextParameters(self) :
-		_params = self.requestContextParameters
-		for _request in self.__chooseRequests():
-			for _k , _v in _request.getRequestContextParameters():
-				if isinstance(_v,list) == False:
-					_v = [_v]
-				_params[_k] = _v
-		return _params
+		params = self.requestContextParameters
+		for request in self.chooseRequests:
+			for k , v in request.getRequestContextParameters():
+				if isinstance(v,list) == False:
+					v = [v]
+				params[k] = v
+		return params
 	
 	def getRequestContext(self):
-		_requestContext = RequestContext()
-		_requestContext.parameters = self.getBasicRequestContextParameters()
-		for _k , _v in self.getRequestContextParameters():
-			_requestContext.parameters[_k] = _v
+		requestContext = ttypes.RequestContext()
+		requestContext.parameters = self.getBasicRequestContextParameters()
+		for k , v in self.getRequestContextParameters():
+			requestContext.parameters[k] = v
 		try:
-		  if self.requestMap['p13nRequestContext'] != None and isinstance(requestMap['p13nRequestContext'], list) == True:
-			_merge = dict(self.requestMap['p13nRequestContext'])
-			_merge.update(_requestContext.parameters)
-			_requestContext.parameters = _merge
-		except NameError:
+
+		  	if self.requestMap['p13nRequestContext'] != None and isinstance(requestMap['p13nRequestContext'], list) == True:
+				merge = dict(self.requestMap['p13nRequestContext'])
+				merge.update(requestContext.parameters)
+				requestContext.parameters = merge
+		except KeyError:
 			pass
-		return _requestContext;
+		return requestContext;
 	
 	
 	def throwCorrectP13nException(self, e) :
@@ -266,16 +265,17 @@ class BxClient:
 
 	def p13nchoose(self, choiceRequest) :
 		try :
-			_choiceResponse = self.getP13n(self._timeout).choose(choiceRequest)
+			print choiceRequest
+			choiceResponse = self.getP13n(self.timeout).choose(choiceRequest)
 			if self.requestMap['dev_bx_disp'] != None and self.requestMap['dev_bx_disp'] == True:
 				print "<pre><h1>Choice Request</h1>"
 				print dir(choiceRequest)
 				print "<br><h1>Choice Response</h1>"
-				print dir(_choiceResponse)
+				print dir(choiceResponse)
 				print "</pre>"
 				sys.exit()
 			
-			return _choiceResponse;
+			return choiceResponse;
 		except Exception as inst:
 			self.throwCorrectP13nException(inst)
 		
@@ -284,82 +284,73 @@ class BxClient:
 	def addRequest(self, request):
 		request.setDefaultIndexId(self.getAccount())
 		request.setDefaultRequestMap(self.requestMap)
-		self.__chooseRequests.append(request)
+		self.chooseRequests.append(request)
 	
 	
 	def resetRequests(self):
-		self.__chooseRequests = []
+		self.chooseRequests = []
 	
 	
 	def getRequest(self, index=0) :
-		if self.__chooseRequests.len() <= index:
+		if len(self.chooseRequests) <= index:
 			return None
 		
-		return self.__chooseRequests[index]
+		return self.chooseRequests[index]
 
 	def getChoiceIdRecommendationRequest(self, choiceId):
-		for _request in self.__chooseRequests:
-			if _request.getChoiceId() == choiceId:
-				return _request;
+		for request in self.chooseRequests:
+			if request.getChoiceId() == choiceId:
+				return request;
 			
 		
 		return None
 	
 
 	def getRecommendationRequests(self):
-		_requests = [];
-		for _request in self.__chooseRequests:
+		requests = [];
+		for request in self.chooseRequests:
 			if issubclass(request, BxRecommendationRequest):
-				_requests.append(_request)
+				requests.append(request)
 			
-		return _requests
+		return requests
 	
 		
 	def getThriftChoiceRequest(self):
 		
-		if self.__chooseRequests.len() == 0 and self.autocompleteRequests.len() > 0:
-			(_sessionid, _profileid) = self.getSessionAndProfile()
-			_userRecord = self.getUserRecord()
-			_p13nrequests = self.map(request.getAutocompleteThriftRequest(_profileid,_userRecord),self.autocompleteRequests)
-			return _p13nrequests
-		
-		
-		_choiceInquiries = []
-		
-		for _request in self.__chooseRequests:
-			
-			_choiceInquiry = ChoiceInquiry()
-			_choiceInquiry.choiceId = _request.getChoiceId();
-			if self.isTest == True :
-				_choiceInquiry.choiceId += "_debugtest"
-			
-			elif self.isDev != None and self.isTest == None:
-				_choiceInquiry.choiceId += "_debugtest"
-			
-			_choiceInquiry.simpleSearchQuery = request.getSimpleSearchQuery(self.getAccount())
-			_choiceInquiry.contextItems = request.getContextItems()
-			_choiceInquiry.minHitCount = request.getMin()
-			_choiceInquiry.withRelaxation = request.getWithRelaxation()
-			
-			_choiceInquiries.append(_choiceInquiry)
-		
+		if len(self.chooseRequests) == 0 and len	(self.autocompleteRequests) > 0:
+			(sessionid, profileid) = self.getSessionAndProfile()
+			userRecord = self.getUserRecord()
+			p13nrequests = self.map(request.getAutocompleteThriftRequest(profileid,userRecord),self.autocompleteRequests)
+			return p13nrequests
 
-		_choiceRequest = self.getChoiceRequest(_choiceInquiries, self.getRequestContext())
-		return _choiceRequest;
+		choiceInquiries = []
+		
+		for request in self.chooseRequests:
+			
+			choiceInquiry = ttypes.ChoiceInquiry()
+			choiceInquiry.choiceId = request.getChoiceId();
+			choiceInquiry.simpleSearchQuery = request.getSimpleSearchQuery()
+			choiceInquiry.contextItems = request.getContextItems()
+			choiceInquiry.minHitCount = request.getMin()
+			choiceInquiry.withRelaxation = request.getWithRelaxation()
+			choiceInquiries.append(choiceInquiry)
+
+		choiceRequest = self.getChoiceRequest(choiceInquiries, self.getRequestContext())
+		return choiceRequest;
 	
 	
 	def choose(self) :
-		self.__chooseResponses = self.p13nchoose(self.getThriftChoiceRequest())
+		self.chooseResponses = self.p13nchoose(self.getThriftChoiceRequest())
 	
 	
 	def flushResponses(self) :
-		self.__chooseResponses = None
+		self.chooseResponses = None
 	
 	
 	def getResponse(self) :
-		if self.__chooseResponses!=None :
+		if self.chooseResponses == None :
 			self.choose()
-		return BxChooseResponse.BxChooseResponse(self.__chooseResponses, self.__chooseRequests)
+		return BxChooseResponse.BxChooseResponse(self.chooseResponses, self.chooseRequests)
 	
 	
 	def setAutocompleteRequest(self, request):
@@ -372,66 +363,66 @@ class BxClient:
 		self.autocompleteRequests = requests;
 	
 	
-	def enhanceAutoCompleterequest(request) :
+	def enhanceAutoCompleterequest(self, request) :
 		request.setDefaultIndexId(self.getAccount())
 	
 	
 	def p13nautocomplete(self, autocompleteRequest) :
 		try :
-			_choiceResponse = self.getP13n(self._timeout).autocomplete(autocompleteRequest)
+			choiceResponse = self.getP13n(self.timeout).autocomplete(autocompleteRequest)
 			if self.requestMap['dev_bx_disp'] !=None and  self.requestMap['dev_bx_disp'] == 'True':
 				print "<pre><h1>Autocomplete Request</h1>"
 				print dir(autocompleteRequest)
 				print "<br><h1>Choice Response</h1>"
-				print dir(_choiceResponse)
+				print dir(choiceResponse)
 				print "</pre>"
 				sys.exit()
 
-			return _choiceResponse
+			return choiceResponse
 		except Exception as inst:
 			self.throwCorrectP13nException(inst)
 
 	def autocomplete(self):
 	
-		(_sessionid, _profileid) = self.getSessionAndProfile()
-		_userRecord = self.getUserRecord()
-		_p13nrequests = self.map(request.getAutocompleteThriftRequest(_profileid,_userRecord),self.autocompleteRequests)
+		(sessionid, profileid) = self.getSessionAndProfile()
+		userRecord = self.getUserRecord()
+		p13nrequests = self.map(request.getAutocompleteThriftRequest(profileid,userRecord),self.autocompleteRequests)
 
-		_i = -1
-		self.autocompleteResponses = self.map(BxAutocompleteResponse(_response,self.autocompleteRequests[++_i]),request.getAutocompleteThriftRequest(_profileid,_userRecord),self.p13nautocompleteAll(_p13nrequests))
+		i = -1
+		self.autocompleteResponses = self.map(BxAutocompleteResponse(response,self.autocompleteRequests[++i]),request.getAutocompleteThriftRequest(profileid,userRecord),self.p13nautocompleteAll(p13nrequests))
 
 		
 	def getAutocompleteResponse(self) :
-		_responses = self.getAutocompleteResponses(self)
+		responses = self.getAutocompleteResponses()
 		try :
-			return _responses[0]
-		except IndexError:
+			return responses[0]
+		except NameError:
 			return None
 	
 	
 	def p13nautocompleteAll(self, requests):
-		_requestBundle = self.AutocompleteRequestBundle()
-		_requestBundle.requests = requests
+		requestBundle = self.AutocompleteRequestBundle()
+		requestBundle.requests = requests
 		try :
-			_choiceResponse = self.getP13n(self._timeout).autocompleteAll(_requestBundle).responses
+			choiceResponse = self.getP13n(self.timeout).autocompleteAll(requestBundle).responses
 			if self.requestMap['dev_bx_disp'] != None and self.requestMap['dev_bx_disp'] == 'True':
 				print "<pre><h1>Request bundle</h1>"
-				print dir(_requestBundle)
+				print dir(requestBundle)
 				print "<br><h1>Choice Response</h1>"
-				print dir(_choiceResponse)
+				print dir(choiceResponse)
 				print "</pre>"
 				sys.exit()
-			return _choiceResponse
+			return choiceResponse
 		except Exception as inst:
 			self.throwCorrectP13nException(inst)
 			
 	def getAutocompleteResponses(self) :
-		if self.autocompleteResponses !=-None:
+		if self.autocompleteResponses != None:
 			self.autocomplete()
 		
 		return self.autocompleteResponses
 	
 
 	def setTimeout(self,timeout) :
-		self._timeout = timeout
+		self.timeout = timeout
 

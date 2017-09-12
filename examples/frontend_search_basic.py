@@ -9,6 +9,7 @@ _print = True
 
 #Create the Boxalino Client SDK instance
 #N.B.: you should not create several instances of BxClient on the same page, make sure to save it in a static variable and to re-use it.
+BxClient.BxClient.LOAD_CLASSES
 bxClient = BxClient.BxClient(_account, _password, _domain)
 
 try :

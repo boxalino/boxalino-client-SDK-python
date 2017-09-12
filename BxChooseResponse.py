@@ -2,40 +2,41 @@ import json
 import BxFacets
 from p13n import ttypes
 class BxChooseResponse:
-	_response = None
-	_bxRequests = None
+	response = None
+	bxRequests = None
 	
 	def __init__(self,response, bxRequests=[]):
-		self._response = response
+		self.response = response
 		if isinstance(bxRequests, list):
-			self._bxRequests =  bxRequests
+			self.bxRequests =  bxRequests
 		else :
-			self._bxRequests = [bxRequests];
+			self.bxRequests = [bxRequests]
 
 	
 	def getResponse(self):
-		return self._response;
+		return self.response
 	
 	def getChoiceResponseVariant(self, choice=None, count= None):
 	
-		for _k , _bxRequest in enumerate(self._bxRequests):
-			if choice == None or choice == _bxRequest.getChoiceId():
+		for k , bxRequest in enumerate(self.bxRequests):
+			k=k+1
+			if choice == None or choice == bxRequest.getChoiceId():
 				if count > 0:
 					count-=1
 					continue
-				return self.getChoiceIdResponseVariant(_k);
+				return self.getChoiceIdResponseVariant(k)
 	
 	def getChoiceIdResponseVariant(self, id=0):
-		_response = self.getResponse()
+		response = self.getResponse()
 		try:
-			if _response.variants != None and _response.variants[id]:
-				return _response.variants[id]
+			if response.variants != None and response.variants[id]:
+				return response.variants[id]
 		except:
 			pass
-		if type(_response).__name__ == 'SearchResult':
-			_variant = BxChooseResponse.ttype.Variant()
-			_variant.searchResult = _response;
-			return _variant
+		if type(response).__name__ == 'SearchResult':
+			variant = BxChooseResponse.ttype.Variant()
+			variant.searchResult = response
+			return variant
 		raise Exception('no variant provided in choice response for variant id ' ,id)
 		
 	
@@ -44,126 +45,125 @@ class BxChooseResponse:
 		if variant.searchRelaxation.suggestionsResults != None :
 			return None
 
-		for _searchResult in variant.searchRelaxation.suggestionsResults():
-			if _searchResult.totalHitCount > 0:
-				if _searchResult.queryText == "" or variant.searchResult.queryText == "":
+		for searchResult in variant.searchRelaxation.suggestionsResults():
+			if searchResult.totalHitCount > 0:
+				if searchResult.queryText == "" or variant.searchResult.queryText == "":
 					continue
-				_distance = levenshtein(_searchResult.queryText, variant.searchResult.queryText)
-				if _distance <= maxDistance and _distance != -1:
-					return _searchResult
+				distance = self.levenshtein(searchResult.queryText, variant.searchResult.queryText)
+				if distance <= maxDistance and distance != -1:
+					return searchResult
 		return None
 	
 	def getVariantSearchResult(self, variant,considerRelaxation=True, maxDistance=10, discardIfSubPhrases = True):
 
-		_searchResult = variant.searchResult
+		searchResult = variant.searchResult
 		if considerRelaxation and variant.searchResult.totalHitCount == 0 and  discardIfSubPhrases !=None and self.areThereSubPhrases()!=None:
 			return self.getFirstPositiveSuggestionSearchResult(variant, maxDistance)
-		return _searchResult
+		return searchResult
 	
 	def getSearchResultHitIds(self, searchResult, fieldId='id'):
-		_ids = [];
-		if _searchResult:
-			if _searchResult.hits:
-				for _item in _searchResult.hits():
-					_ids.append( _item.values[_fieldId][0])
-			elif _searchResult.hitsGroups != None:
-				for _hitGroup  in _searchResult.hitsGroups():
-					_ids.append( _hitGroup.groupValue)
-		return _ids
+		ids = [];
+		if searchResult:
+			if searchResult.hits:
+				for item in searchResult.hits():
+					ids.append( item.values[fieldId][0])
+			elif searchResult.hitsGroups != None:
+				for hitGroup  in searchResult.hitsGroups():
+					ids.append( hitGroup.groupValue)
+		return ids
 	
 	def getHitIds(self, choice=None, considerRelaxation=True, count=0, maxDistance=10, fieldId='id', discardIfSubPhrases = True):
-		_variant = self.getChoiceResponseVariant(choice, count)
-		return self.getSearchResultHitIds(self.getVariantSearchResult(_variant, considerRelaxation, maxDistance, discardIfSubPhrases), fieldId)
+		variant = self.getChoiceResponseVariant(choice, count)
+		return self.getSearchResultHitIds(self.getVariantSearchResult(variant, considerRelaxation, maxDistance, discardIfSubPhrases), fieldId)
 
 	def retrieveHitFieldValues(self, item, field, fields, hits):
-		_fieldValues = [];
-		for _bxRequest in self.bxRequests():
-			_fieldValues = dict(_fieldValues ,_bxRequest.retrieveHitFieldValues(item, field, fields, hits))
-		return _fieldValues
+		fieldValues = []
+		for bxRequest in self.bxRequests():
+			fieldValues = dict(fieldValues ,bxRequest.retrieveHitFieldValues(item, field, fields, hits))
+		return fieldValues
 	
 	def getSearchHitFieldValues(self, searchResult, fields=None):
-		_fieldValues = []
+		fieldValues = []
 		if searchResult != None:
-			_hits = searchResult.hits
+			hits = searchResult.hits
 			if searchResult.hits == None:
-				_hits = []
-				for _hitGroup in searchResult.hitsGroups :
-					_hits.append(_hitGroup.hits[0])
+				hits = []
+				for hitGroup in searchResult.hitsGroups :
+					hits.append(hitGroup.hits[0])
 				
-			for _item in _hits:
-				_finalFields = fields;
-				if _finalFields == None:
-					_finalFields = [k for k,v in _item.items() if v == _item.values]
+			for item in hits:
+				finalFields = fields
+				if finalFields == None:
+					finalFields = [k for k,v in item.items() if v == item.values]
 				
-				for _field in _finalFields:
+				for field in finalFields:
 					try:
-						_item.values[_field]
-						if _item.values[_field] != None:
-							_fieldValues[_item.values['id'][0]][_field] = _item.values[_field];
+						if item.values[field] != None:
+							fieldValues[item.values['id'][0]][field] = item.values[field]
 					except IndexError: 
 						pass
 					try:
-						if _fieldValues[_item.values['id'][0]][_field]:
+						if fieldValues[item.values['id'][0]][field]:
 							pass
 					except	IndexError:
-						_fieldValues[_item.values['id'][0]][_field] = self.retrieveHitFieldValues(_item, _field, _searchResult.hits, _finalFields);
-		return _fieldValues;
+						fieldValues[item.values['id'][0]][field] = self.retrieveHitFieldValues(item, field, searchResult.hits, finalFields)
+		return fieldValues
 	
 	def getRequestFacets(self,  choice=None):
 		if choice == None:
 			try:
 				self.bxRequests[0]
-				return self.bxRequests[0].getFacets();
+				return self.bxRequests[0].getFacets()
 			except IndexError:
 				pass
 			return None
-		for _bxRequest in self.bxRequests:
-			if _bxRequest.getChoiceId() == choice:
-				return _bxRequest.getFacets();
+		for bxRequest in self.bxRequests:
+			if bxRequest.getChoiceId() == choice:
+				return bxRequest.getFacets()
 		return None
 	
 
 	def getFacets(self, choice=None, considerRelaxation=True, count=0, maxDistance=10, discardIfSubPhrases = True):
 		
-		_variant = self.getChoiceResponseVariant(choice, count)
-		_searchResult = self.getVariantSearchResult(_variant, considerRelaxation, maxDistance, discardIfSubPhrases)
-		_facets = self.getRequestFacets(choice)
+		variant = self.getChoiceResponseVariant(choice, count)
+		searchResult = self.getVariantSearchResult(variant, considerRelaxation, maxDistance, discardIfSubPhrases)
+		facets = self.getRequestFacets(choice)
 
-		if _facets==None or _searchResult == None:
-			return BxFacets()
+		if facets==None or searchResult == None:
+			return None
 		
-		_facets.setSearchResults(_searchResult)
-		return _facets
+		facets.setFacetResponse(searchResult.facetResponses)
+		return facets
 
 
 	def getHitFieldValues(self, fields, choice=None, considerRelaxation=True, count=0, maxDistance=10, discardIfSubPhrases = True):
-		_variant = self.getChoiceResponseVariant(choice, count)
-		return self.getSearchHitFieldValues(self.getVariantSearchResult(_variant, considerRelaxation, maxDistance, discardIfSubPhrases), fields)
+		variant = self.getChoiceResponseVariant(choice, count)
+		return self.getSearchHitFieldValues(self.getVariantSearchResult(variant, considerRelaxation, maxDistance, discardIfSubPhrases), fields)
 	
 	def getFirstHitFieldValue(self, field=None, returnOneValue=True, hitIndex=0, choice=None, count=0, maxDistance=10):
-		_fieldNames = None
+		fieldNames = None
 		if field != None:
-			_fieldNames = [field]
-		_count = 0
-		for _id , _fieldValueMap in self.getHitFieldValues(_fieldNames, choice, True, count, maxDistance):
+			fieldNames = [field]
+		count = 0
+		for id , fieldValueMap in self.getHitFieldValues(fieldNames, choice, True, count, maxDistance):
 			count += 1
 			if count < hitIndex:
 				continue
 			
-			for _fieldName , _fieldValues in _fieldValueMap:
-				if len(_fieldValues)>0:
-					if _returnOneValue==True:
-						return _fieldValues[0]
+			for fieldName , fieldValues in fieldValueMap:
+				if len(fieldValues)>0:
+					if returnOneValue==True:
+						return fieldValues[0]
 					else:
-						return _fieldValues
+						return fieldValues
 		return None
 	
-	def  getTotalHitCount(choice=None, considerRelaxation=True, count=0, maxDistance=10, discardIfSubPhrases = True):
-		_variant = self.getChoiceResponseVariant(choice, count)
-		_searchResult = self.getVariantSearchResult(_variant, considerRelaxation, maxDistance, discardIfSubPhrases)
-		if _searchResult == None:
+	def  getTotalHitCount(self,choice=None, considerRelaxation=True, count=0, maxDistance=10, discardIfSubPhrases = True):
+		variant = self.getChoiceResponseVariant(choice, count)
+		searchResult = self.getVariantSearchResult(variant, considerRelaxation, maxDistance, discardIfSubPhrases)
+		if searchResult == None:
 			return 0
-		return _searchResult.totalHitCount
+		return searchResult.totalHitCount
 
 
 	def areResultsCorrected(self, choice=None, count=0, maxDistance=10):
@@ -175,18 +175,18 @@ class BxChooseResponse:
 	
 	
 	def getCorrectedQuery(self, choice=None, count=0, maxDistance=10):
-		_variant = self.getChoiceResponseVariant(choice, count)
-		_searchResult = self.getVariantSearchResult(variant, True, maxDistance, False)
-		if _searchResult == True:
-			return _searchResult.queryText
+		variant = self.getChoiceResponseVariant(choice, count)
+		searchResult = self.getVariantSearchResult(variant, True, maxDistance, False)
+		if searchResult == True:
+			return searchResult.queryText
 		
 		return None
 
 
 	def areThereSubPhrases(self, choice=None, count=0, maxBaseResults=0):
-		_variant = self.getChoiceResponseVariant(choice, count)
+		variant = self.getChoiceResponseVariant(choice, count)
 		try:
-			return _variant.searchRelaxation.subphrasesResults and len(_variant.searchRelaxation.subphrasesResults) > 0 and self.getTotalHitCount(choice, False, count) <= maxBaseResults
+			return variant.searchRelaxation.subphrasesResults and len(variant.searchRelaxation.subphrasesResults) > 0 and self.getTotalHitCount(choice, False, count) <= maxBaseResults
 		except IndexError:
 			pass
 	
@@ -194,12 +194,12 @@ class BxChooseResponse:
 		if self.areThereSubPhrases(self, choice, count)== False:
 			return []
 		
-		_queries = []
-		_variant = self.getChoiceResponseVariant(choice, count)
-		for _searchResult in _variant.searchRelaxation.subphrasesResults:
-			_queries.append(_searchResult.queryText)
+		queries = []
+		variant = self.getChoiceResponseVariant(choice, count)
+		for searchResult in variant.searchRelaxation.subphrasesResults:
+			queries.append(searchResult.queryText)
 		
-		return _queries
+		return queries
 	
 	
 	def getSubPhraseSearchResult(self , queryText, choice=None, count=0):
@@ -207,46 +207,46 @@ class BxChooseResponse:
 			return None
 		
 		_variant = self.getChoiceResponseVariant(choice, count)
-		for _searchResult in _variant.searchRelaxation.subphrasesResults:
-			if _searchResult.queryText == queryText:
-				return _searchResult;
+		for searchResult in _variant.searchRelaxation.subphrasesResults:
+			if searchResult.queryText == queryText:
+				return searchResult
 			
 		
 		return None
 	
 	def getSubPhraseTotalHitCount(self , queryText, choice=None, count=0):
-		_searchResult = self.getSubPhraseSearchResult(queryText, choice, count)
-		if _searchResult!= None:
-			return _searchResult.totalHitCount
+		searchResult = self.getSubPhraseSearchResult(queryText, choice, count)
+		if searchResult!= None:
+			return searchResult.totalHitCount
 		return 0
 	
 
 	def getSubPhraseHitIds(self, queryText, choice=None, count=0, fieldId='id'):
-		_searchResult = self.getSubPhraseSearchResult(queryText, choice, count)
-		if _searchResult != None:
-			return self.getSearchResultHitIds(_searchResult, fieldId)
+		searchResult = self.getSubPhraseSearchResult(queryText, choice, count)
+		if searchResult != None:
+			return self.getSearchResultHitIds(searchResult, fieldId)
 		return []
 
 
 	def getSubPhraseHitFieldValues(self, queryText, fields, choice=None, considerRelaxation=True, count=0):
-		_searchResult = self.getSubPhraseSearchResult(queryText, choice, count)
-		if  _searchResult!= None:
-			return self.getSearchHitFieldValues(_searchResult, fields)
+		searchResult = self.getSubPhraseSearchResult(queryText, choice, count)
+		if  searchResult!= None:
+			return self.getSearchHitFieldValues(searchResult, fields)
 		return []
 
 	
-	def toJson(fields):
-		_object = []
-		_object['hits'] = []
-		for _id , _fieldValueMap in self.getHitFieldValues(fields):
-			_hitFieldValues = {}
-			for _fieldName , _fieldValues in _fieldValueMap:
-				_hitFieldValues[_fieldName] = {}
-				_hitFieldValues[_fieldName]['values'] = fieldValues
-			_object['hits'].append({})
-			_object['hits']['id'] = _id
-			_object['hits']['fieldValues'] = _hitFieldValues
-		return json.dumps(_object)
+	def toJson(self, fields):
+		object = []
+		object['hits'] = []
+		for id , fieldValueMap in self.getHitFieldValues(fields):
+			hitFieldValues = {}
+			for fieldName , fieldValues in fieldValueMap:
+				hitFieldValues[fieldName] = {}
+				hitFieldValues[fieldName]['values'] = fieldValues
+			object['hits'].append({})
+			object['hits']['id'] = id
+			object['hits']['fieldValues'] = hitFieldValues
+		return json.dumps(object)
 
 
 
