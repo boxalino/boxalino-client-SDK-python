@@ -10,7 +10,7 @@ class BxRequest:
 	 
 	indexId = None 
 	requestMap = None 
-	returnFields = None
+	returnFields = set("id")
 	offset = 0 
 	queryText = "" 
 	bxFacets = None 

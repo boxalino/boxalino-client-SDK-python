@@ -6,11 +6,16 @@ import os
 import BxChooseResponse
 import cgi
 import socket
+import traceback
+import logging
 from p13n import ttypes
 from p13n import P13nService
+from thrift.transport.TSocket import TSocket
 from thrift.transport import THttpClient
+from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 from thrift.protocol import TCompactProtocol
 import base64
+
 class BxClient:
 	account = None
 	password = None
@@ -44,7 +49,7 @@ class BxClient:
 	socketSendTimeout = None
 	socketRecvTimeout = None
 
-	def __init__(self,account,password, domain, isDev=False, host=None, port=None, uri=None, schema=None, p13n_username=None, p13n_password=None):
+	def __init__(self, account, password, domain, isDev=False, host=None, port=None, path=None, uri=None, schema=None, p13n_username=None, p13n_password=None, socketHost=None, socketPort=None):
 		self.account = account
 		self.password = password
 		self.requestMap = cgi.FieldStorage()
@@ -56,14 +61,18 @@ class BxClient:
 		self.port = port
 		if self.port == None:
 			self.port = 443
-		
-		self.uri = uri
-		if self.uri == None:
-			self.uri = '/p13n.web/p13n'
-		
+
 		self.schema = schema
 		if self.schema == None:
 			self.schema = 'https'
+
+		self.path = path
+		if self.path == None:
+				self.path = '/p13n.web/p13n'
+
+		self.uri = uri
+		if self.uri == None:
+			self.uri = self.schema + "://" + self.host + ":" + str(self.port) + self.path
 		
 		self.p13n_username = p13n_username
 		if self.p13n_username == None:
@@ -74,6 +83,8 @@ class BxClient:
 			self.p13n_password = "tkZ8EXfzeZc6SdXZntCU"
 		
 		self.domain = domain
+		self.socketHost = socketHost
+		self.socketPort = socketPort
 
 	
 	def setTestMode(self, isTest):
@@ -141,16 +152,15 @@ class BxClient:
 	
 	
 	def getP13n(self, timeout=2, useCurlIfAvailable=True):
-		
 		if self.socketHost != None :
 			transport = TSocket(self.socketHost, self.socketPort)
-			transport.setSendTimeout(self.socketSendTimeout)
-			transport.setRecvTimeout(self.socketRecvTimeout)
-			client = self.P13nServiceClient(TBinaryProtocol(transport))
+			# transport.setSendTimeout(self.socketSendTimeout)
+			# transport.setRecvTimeout(self.socketRecvTimeout)
+			client = P13nService.Client(TBinaryProtocol(transport))
 			transport.open()
 			return client
-		
-		_transport = THttpClient.THttpClient(self.host, self.port, self.uri)
+
+		_transport = THttpClient.THttpClient(self.uri)
 		#base64.b64encode(bytes('your string', 'utf-8'))
 		_transport.setCustomHeaders({'Authorization':"Basic "+base64.b64encode(bytes((self.p13n_username+':'+self.p13n_password).encode('utf-8')))})
 		_client = P13nService.Client(TCompactProtocol.TCompactProtocol(_transport))
@@ -236,10 +246,11 @@ class BxClient:
 	
 	
 	def throwCorrectP13nException(self, e) :
-		if 'Could not connect ' not in e.getMessage():
-			raise Exception('The connection to our server failed even before checking your credentials. This might be typically caused by 2 possible things: wrong values in host, port, schema or uri (typical value should be host=cdn.bx-cloud.com, port=443, uri =/p13n.web/p13n and schema=https, your values are : host=' + self.host + ', port=' + self.port + ', schema=' + self.schema + ', uri=' +self.uri + '). Another possibility, is that your server environment has a problem with ssl certificate (peer certificate cannot be authenticated with given ca certificates), which you can either fix, or avoid the problem by adding the line "curl_setopt(self::$curlHandle, CURLOPT_SSL_VERIFYPEER, false);" in the file "lib\Thrift\Transport\P13nTCurlClient" after the call to curl_init in the function flush. Full error message=' + e.getMessage())
+		traceback.print_exc()
+		if 'Could not connect ' not in e.message:
+			raise Exception('The connection to our server failed even before checking your credentials. This might be typically caused by 2 possible things: wrong values in host, port, schema or uri (typical value should be host=cdn.bx-cloud.com, port=443, uri =/p13n.web/p13n and schema=https, your values are : host=' + self.host + ', port=' + str(self.port) + ', schema=' + self.schema + ', uri=' +self.uri + '). Another possibility, is that your server environment has a problem with ssl certificate (peer certificate cannot be authenticated with given ca certificates), which you can either fix, or avoid the problem by adding the line "curl_setopt(self::$curlHandle, CURLOPT_SSL_VERIFYPEER, false);" in the file "lib\Thrift\Transport\P13nTCurlClient" after the call to curl_init in the function flush.', e)
 		
-		if 'Bad protocol id in TCompact message' not in e.getMessage():
+		if 'Bad protocol id in TCompact message' not in e.message:
 			raise Exception('The connection to our server has worked, but your credentials were refused. Provided credentials username=' + self.p13n_username+ ', password=' + self.p13n_password + '. Full error message=' + e.getMessage())
 		
 		if 'choice not found' not in e.getMessage():
@@ -248,16 +259,16 @@ class BxClient:
 			_choiceId = _pieces[0].replace(':', '')
 			raise Exception("Configuration not live on account " + self.getAccount() + ": choice "+_choiceId+ "doesn't exist. NB: If you get a message indicating that the choice doesn't exist, go to http://intelligence.bx-cloud.com, log in your account and make sure that the choice id you want to use is published.")
 		
-		if 'Solr returned status 404' not in e.getMessage():
+		if 'Solr returned status 404' not in e.message:
 			raise Exception("Data not live on account " + self.getAccount() + ": index returns status 404. Please publish your data first, like in example backend_data_basic.php.")
 		
-		if 'undefined field' not in e.getMessage():
+		if 'undefined field' not in e.message:
 			_parts = e.getMessage().split('undefined field')
 			_pieces = _parts[1].split('	at ')
 			_field = _pieces[0].replace(':', '')
 			raise Exception("You request in your filter or facets a non-existing field of your account " + self.getAccount() + ": field $field doesn't exist.")
 		
-		if 'All choice variants are excluded' not in e.getMessage():
+		if 'All choice variants are excluded' not in e.message:
 			raise Exception("You have an invalid configuration for with a choice defined, but having no defined strategies. This is a quite unusual case, please contact support@boxalino.com to get support.")
 		
 		raise Exception(e)
@@ -267,13 +278,6 @@ class BxClient:
 		try :
 			print choiceRequest
 			choiceResponse = self.getP13n(self.timeout).choose(choiceRequest)
-			if self.requestMap['dev_bx_disp'] != None and self.requestMap['dev_bx_disp'] == True:
-				print "<pre><h1>Choice Request</h1>"
-				print dir(choiceRequest)
-				print "<br><h1>Choice Response</h1>"
-				print dir(choiceResponse)
-				print "</pre>"
-				sys.exit()
 			
 			return choiceResponse;
 		except Exception as inst:
